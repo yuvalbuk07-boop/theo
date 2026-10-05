@@ -307,6 +307,27 @@ details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px
 .choice-cards .card:hover{transform:translateY(-6px)}
 
 
+
+/* testers */
+.links{display:flex;justify-content:center;gap:18px}
+.links button{border:0;background:none;color:var(--muted);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px}
+.nudge{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border-radius:14px;background:var(--card);color:var(--black)}
+.nudge b{display:block;font-size:14px}
+.nudge span{font-size:13px;color:#4a5558}
+.nudge-btns{display:flex;gap:8px;justify-content:flex-end}
+.nudge .btn:not(.primary){border-color:#c9bfa6;color:var(--black)}
+.card-panel.invite{background:linear-gradient(160deg,#1d5560,var(--panel))}
+.fb-sub{color:var(--muted);margin-top:-2px}
+.fb{display:flex;flex-direction:column;gap:6px}
+.fb label{font-weight:600;font-size:13.5px;margin-top:8px}
+.fb-stars{display:flex;gap:6px}
+.fb-stars button{border:0;background:none;font-size:32px;line-height:1;color:color-mix(in srgb,var(--ink) 22%,transparent);cursor:pointer;padding:0 2px}
+.fb-stars button.on{color:var(--accent)}
+.fb-chips{display:flex;flex-wrap:wrap;gap:6px}
+.fb-chips button{border-radius:999px;padding:7px 12px;border:1.5px solid color-mix(in srgb,var(--ink) 25%,transparent);background:none;font-weight:600;font-size:13px;cursor:pointer}
+.fb-chips button[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.fb input,.fb textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--rail);border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);border-radius:10px;padding:9px 10px;-webkit-user-select:text;user-select:text}
+.fb textarea{resize:vertical}
 /* lesson */
 .coach{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--card);color:var(--black);border-radius:14px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .coach .av{flex:none;width:30px;height:30px;font-size:13px;color:var(--black)}
@@ -807,7 +828,7 @@ function perkArt(id){
 }
 
 /* ================= economy (saved on this device) ================= */
-function freshEcon(){return {tutorialDone:false,tickets:TICKET_CAP,lastRegen:Date.now(),coins:2000,country:0,owned:[],equipped:[],stamps:[],dailyDay:'',adsDay:'',ads:0,mult:1,stake:1000,rival:0}}
+function freshEcon(){return {stats:{rounds:0,wins:0,caught:0,catches:0,duels:0,days:[]},tutorialDone:false,tickets:TICKET_CAP,lastRegen:Date.now(),coins:2000,country:0,owned:[],equipped:[],stamps:[],dailyDay:'',adsDay:'',ads:0,mult:1,stake:1000,rival:0}}
 function loadEcon(){try{const e=JSON.parse(localStorage.getItem('yaniv-econ')||'null');if(e&&e.owned)return {...freshEcon(),...e}}catch(err){}return freshEcon()}
 function saveEcon(){try{localStorage.setItem('yaniv-econ',JSON.stringify(E))}catch(err){}}
 function regen(){
@@ -1006,6 +1027,7 @@ function callYaniv(pi){
     S.starter=asaf?S.players.indexOf(asafers[0]):pi;
     S.phase=(S.players[0].out||active().length<=1)?'gameOver':'roundEnd';
   }
+  trackRound(S.result);
   S.stamping=true; S.sel=new Set(); render();
   runReveal(caller,t,others,asafers,()=>{S.stamping=false;render();setTimeout(resultSound,150)});
 }
@@ -1199,6 +1221,84 @@ function openWelcome(){
   $('ov-info').hidden=false;
 }
 
+/* ================= testers: stats, feedback, sharing ================= */
+const GAME_URL='https://yuvalbuk07-boop.github.io/yaniv-hostel/';
+const VERSION='v11';
+// Google Form wiring. Filled in from the form's pre-filled link; null = feedback hidden.
+const FORM=null;
+const SHARE_TEXT=`I'm testing Yaniv Hostel, the card game backpackers play around the world. Try it on your phone: ${GAME_URL}\n(iPhone: open in Safari, tap Share, then "Add to Home Screen")`;
+function trackDay(){
+  E.stats=E.stats||{rounds:0,wins:0,caught:0,catches:0,duels:0,days:[]};
+  if(!E.stats.days.includes(today())){E.stats.days.push(today());saveEcon()}
+}
+function trackRound(r){
+  if(S.mode==='tutorial'||!r)return;
+  const st=E.stats; st.rounds++;
+  const meCalled=r.callerHuman, meWon=r.place===0||(S.mode==='classic'&&r.rows.find(x=>x.human)?.add===0);
+  if(meWon)st.wins++;
+  if(r.asaf&&meCalled)st.caught++;
+  if(r.asaf&&r.asafer==='You')st.catches++;
+  if(S.mode==='duel')st.duels++;
+  saveEcon();
+}
+function gameData(){
+  const st=E.stats, ua=navigator.userAgent;
+  const device=/iPhone/.test(ua)?'iPhone':/iPad/.test(ua)?'iPad':/Android/.test(ua)?'Android':'Desktop';
+  const standalone=(navigator.standalone||matchMedia('(display-mode: standalone)').matches)?'home-screen app':'browser';
+  return `version ${VERSION}; ${device}, ${standalone}; rounds ${st.rounds}, wins ${st.wins}, got caught ${st.caught}, caught others ${st.catches}, duels ${st.duels}; days played ${st.days.length}; city ${C().city}; coins ${E.coins}; cards ${E.owned.join(', ')||'none'}; lesson ${E.tutorialDone?'done':'not done'}`;
+}
+async function shareGame(){
+  SFX.click();
+  try{
+    if(navigator.share){await navigator.share({title:'Yaniv Hostel',text:SHARE_TEXT});return}
+  }catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(SHARE_TEXT);toast('Invite copied. Paste it in WhatsApp.')}
+  catch(e){toast(GAME_URL)}
+}
+let fb={};
+function openFeedback(){
+  if(!FORM)return;
+  fb={fun:0,knew:'',understood:'',again:''};
+  const chips=(k,opts)=>`<div class="fb-chips" data-k="${k}">${opts.map(o=>`<button type="button" data-act="fbchip" data-k="${k}" data-v="${o}">${o}</button>`).join('')}</div>`;
+  $('info-sheet').innerHTML=`<h2>Tell us what you think</h2>
+    <p class="fb-sub">30 seconds. It goes straight to the people making the game.</p>
+    <div class="fb">
+      <label>How fun was it?</label>
+      <div class="fb-stars">${[1,2,3,4,5].map(n=>`<button type="button" data-act="fbstar" data-v="${n}" aria-label="${n} of 5">★</button>`).join('')}</div>
+      <label>Did you know Yaniv before?</label>${chips('knew',['Yes','No'])}
+      <label>Did you understand how to play?</label>${chips('understood',['Right away','After a few rounds','Not really'])}
+      <label>Would you play again tomorrow?</label>${chips('again',['Yes','Maybe','No'])}
+      <label for="fb-best">What was the best part?</label><input id="fb-best" maxlength="300" autocomplete="off">
+      <label for="fb-bad">What was annoying or confusing?</label><textarea id="fb-bad" rows="3" maxlength="1500"></textarea>
+    </div>
+    <div class="foot"><button class="btn" type="button" data-act="close">Not now</button><button class="btn primary" type="button" data-act="fbsend" id="fb-send">Send</button></div>`;
+  $('ov-info').hidden=false;
+}
+function fbPaint(){
+  document.querySelectorAll('.fb-stars button').forEach(b=>b.classList.toggle('on',+b.dataset.v<=fb.fun));
+  document.querySelectorAll('.fb-chips button').forEach(b=>b.setAttribute('aria-pressed',fb[b.dataset.k]===b.dataset.v));
+}
+async function sendFeedback(){
+  if(!fb.fun){toast('Tap the stars first.');SFX.nope();return}
+  const body=new URLSearchParams();
+  const put=(k,v)=>{if(v!==''&&v!=null)body.append(FORM.entries[k],v)};
+  put('fun',fb.fun); put('knew',fb.knew); put('understood',fb.understood); put('again',fb.again);
+  put('best',$('fb-best').value.trim()); put('bad',$('fb-bad').value.trim()); put('data',gameData());
+  const btn=$('fb-send'); btn.disabled=true; btn.textContent='Sending…';
+  try{
+    await fetch(FORM.action,{method:'POST',mode:'no-cors',body});
+    E.fbSent=(E.fbSent||0)+1; saveEcon();
+    $('ov-info').hidden=true; SFX.coins(); toast('Thank you! That really helps.'); render();
+  }catch(e){
+    btn.disabled=false; btn.textContent='Send'; toast('No connection. Try again when you are online.');
+  }
+}
+function feedbackNudge(){
+  if(!FORM||E.fbSent||E.stats.rounds<5||(E.fbLater&&E.stats.rounds<E.fbLater))return '';
+  return `<div class="nudge"><div><b>You've played ${E.stats.rounds} rounds.</b><span>Got 30 seconds to tell us what you think?</span></div>
+    <div class="nudge-btns"><button class="btn sm" type="button" data-act="fblater">Later</button><button class="btn primary sm" type="button" data-act="feedback">Sure</button></div></div>`;
+}
+
 /* ================= deck & market ================= */
 function buyPerk(k){
   const pk=PERKS[k]; if(E.owned.includes(k))return;
@@ -1221,7 +1321,7 @@ function renderPlay(){
   const adsLeft=E.adsDay===today()?ADS_PER_DAY-E.ads:ADS_PER_DAY;
   const dailyReady=E.dailyDay!==today();
   const segBtn=k=>`<button type="button" data-act="mult" data-m="${k}" aria-pressed="${m===k}">${k} <span class="ic-ticket"></span></button>`;
-  $('scr-play').innerHTML=`<div class="pad">
+  $('scr-play').innerHTML=`<div class="pad">${feedbackNudge()}
     <div class="hero">${sceneSVG(ci,FULL,{id:'thumb'})}
       <div class="cap"><div><small>Stop ${ci+1} of 12 · ${c.country}</small><b>${c.city}</b></div><span class="go">${c.ruleText}</span></div>
     </div>
@@ -1234,6 +1334,7 @@ function renderPlay(){
       <button type="button" data-act="daily" ${dailyReady?'':'disabled'}>${dailyReady?'Daily gift':'Gift claimed'}<small>+5 tickets, +${fmt(c.reward/2)} coins</small></button>
       <button type="button" data-act="ad" ${adsLeft>0?'':'disabled'}>Free tickets<small>Watch an ad · ${adsLeft} left</small></button>
     </div>
+    <div class="links"><button type="button" data-act="share">Invite a friend</button>${FORM?'<button type="button" data-act="feedback">Send feedback</button>':''}</div>
   </div>`;
   renderTicketNote();
 }
@@ -1266,6 +1367,8 @@ function renderFriends(){
   const rivals=BOTS.map((b,i)=>`<button type="button" class="rival ${E.rival===i?'on':''}" data-act="rival" data-i="${i}" style="--av:${b.color}"><span class="av">${b.name[0]}</span>${b.name}</button>`).join('');
   const stakeBtn=v=>`<button type="button" data-act="stake" data-v="${v}" aria-pressed="${st===v}" ${E.coins>=v?'':'disabled'}><span class="ic-coin"></span>${v>=1000?v/1000+'k':v}</button>`;
   $('scr-friends').innerHTML=`<div class="pad">
+    <div class="card-panel invite"><h2 style="font-size:19px">Invite friends to test</h2><p>Send the game in WhatsApp. It installs on any phone in a few seconds.</p>
+      <button class="btn primary wide" type="button" data-act="share">Share the game</button></div>
     <div class="card-panel"><h2>Duel</h2><p>One against one for coins. Winner takes the pot, minus 5%. No tickets needed.</p>
       <div class="rivals">${rivals}</div>
       <div class="bet" style="margin:12px 0"><label>Stake</label><div class="seg">${stakeBtn(1000)}${stakeBtn(5000)}${stakeBtn(25000)}</div></div>
@@ -1441,6 +1544,8 @@ function openSettings(){
     <div class="form">
       <div class="field"><label for="s-sfx">Sound effects<small>Cards, coins, Yaniv and Asaf</small></label><input type="checkbox" id="s-sfx"></div>
       <div class="field"><label for="s-music">Music<small>A chill lounge beat, different in each city</small></label><input type="checkbox" id="s-music"></div>
+      ${FORM?'<div class="field"><label>Send feedback<small>Tell us what to fix</small></label><button class="btn" type="button" data-act="feedback">Open</button></div>':''}
+      <div class="field"><label>Share the game<small>Invite a friend to test</small></label><button class="btn" type="button" data-act="share">Share</button></div>
       <div class="field"><label>Lesson with Nico<small>Replay the one-hand tutorial</small></label><button class="btn" type="button" data-act="tutstart">Play</button></div>
       <div class="field"><label>How to play<small>The rules in six lines</small></label><button class="btn" type="button" data-act="rules">Open</button></div>
       <div class="field"><label>Reset progress<small>Prototype only: coins, tickets and cards</small></label><button class="btn" type="button" data-act="reset">Reset</button></div>
@@ -1500,6 +1605,12 @@ document.addEventListener('click',e=>{
   else if(act==='reset'){if(!resetArmed){resetArmed=true;el.textContent='Tap again';return}E=freshEcon();saveEcon();$('ov-info').hidden=true;goTab('play');toast('Progress reset.')}
   else if(act==='rules'){openRules()}
   else if(act==='settings'){openSettings()}
+  else if(act==='share'){shareGame()}
+  else if(act==='feedback'){SFX.click();openFeedback()}
+  else if(act==='fblater'){E.fbLater=E.stats.rounds+10;saveEcon();render()}
+  else if(act==='fbstar'){fb.fun=+el.dataset.v;SFX.tap();fbPaint()}
+  else if(act==='fbchip'){fb[el.dataset.k]=el.dataset.v;SFX.tap();fbPaint()}
+  else if(act==='fbsend'){sendFeedback()}
   else if(act==='tutnext'){S.tut.step++;SFX.click();render()}
   else if(act==='tutstart'){startTutorial()}
   else if(act==='tutskip'){E.tutorialDone=true;saveEcon();$('ov-info').hidden=true}
@@ -1517,7 +1628,7 @@ setInterval(()=>{
 /* ================= boot (keeps the game across live updates) ================= */
 window.claude?.hot?.snapshot?.(()=>({S:{...S,sel:[...(S.sel||[])],stamping:false},uid}));
 function start(data){
-  E=loadEcon(); regen();
+  E=loadEcon(); regen(); trackDay();
   if(data&&data.S&&data.S.g&&data.S.v===4){
     S={...data.S,sel:new Set(data.S.sel||[])};uid=data.uid||5000;
     render();maybeBot();
