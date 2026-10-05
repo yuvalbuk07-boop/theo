@@ -553,7 +553,7 @@ function sceneSVG(ci,levels,{interactive=false,id='s'}={}){
 
 /* ================= sound (synthesized, no audio files) ================= */
 const AUD=(()=>{
-  let ctx=null, master, sfxBus, musicBus, verb, musicTimer=null, nextBeat=0, step=0;
+  let ctx=null, master, sfxBus, musicBus, verb, mverb, musicTimer=null;
   let prefs={sfx:true,music:true};
   try{prefs={...prefs,...JSON.parse(localStorage.getItem('yaniv-sound')||'{}')}}catch(e){}
   const save=()=>{try{localStorage.setItem('yaniv-sound',JSON.stringify(prefs))}catch(e){}};
@@ -569,9 +569,11 @@ const AUD=(()=>{
     ctx=new AC();
     master=ctx.createGain(); master.gain.value=.9; master.connect(ctx.destination);
     sfxBus=ctx.createGain(); sfxBus.gain.value=prefs.sfx?1:0; sfxBus.connect(master);
-    musicBus=ctx.createGain(); musicBus.gain.value=prefs.music?.55:0; musicBus.connect(master);
+    musicBus=ctx.createGain(); musicBus.gain.value=0; musicBus.connect(master);
     verb=ctx.createConvolver(); verb.buffer=impulse(2.2);
-    const wet=ctx.createGain(); wet.gain.value=.28; verb.connect(wet); wet.connect(master);
+    const wet=ctx.createGain(); wet.gain.value=.28; verb.connect(wet); wet.connect(sfxBus);
+    mverb=ctx.createConvolver(); mverb.buffer=impulse(2.6);
+    const mwet=ctx.createGain(); mwet.gain.value=.3; mverb.connect(mwet); mwet.connect(musicBus);
     return true;
   }
   function unlock(){
@@ -627,42 +629,66 @@ const AUD=(()=>{
     },
     fanfare(){SFX.yaniv();setTimeout(SFX.win,700)},
   };
-  // ---- background music: a slow nylon-guitar arpeggio per city ----
-  const PROG=[
-    [[57,64,69,72],[50,62,65,69],[52,59,64,68],[57,64,69,72]],      // Lisbon: Am Dm E Am, fado-ish
-    [[50,62,66,69],[48,60,64,67],[47,59,62,66],[45,57,61,64]],      // Goa: D C Bm A, beach
+  // ---- background music: a soft lo-fi lounge loop per city ----
+  // Everything musical (notes, drums, echo) goes through musicBus, so muting it is instant and total.
+  const SONGS=[
+    {bpm:76, chords:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]], shaker:false}, // Lisbon: Fmaj7 Em7 Dm7 Cmaj7
+    {bpm:84, chords:[[57,60,64,67],[50,54,57,64],[55,59,62,66],[48,52,55,59]], shaker:true},  // Goa: Am7 D9 Gmaj7 Cmaj7
   ];
-  const PATTERN=[0,1,2,3,2,1,2,3];
-  function pluck(m,t,vol){
-    const o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
-    o.type='triangle'; o2.type='sine'; o.frequency.value=mtof(m); o2.frequency.value=mtof(m)*2.003;
-    f.type='lowpass'; f.frequency.setValueAtTime(2600,t); f.frequency.exponentialRampToValueAtTime(700,t+.6);
-    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.008); g.gain.exponentialRampToValueAtTime(.0001,t+1.4);
-    const g2=ctx.createGain(); g2.gain.value=.3; o2.connect(g2); g2.connect(f);
-    o.connect(f); f.connect(g); g.connect(musicBus);
-    const s=ctx.createGain(); s.gain.value=.5; g.connect(s); s.connect(verb);
-    o.start(t); o2.start(t); o.stop(t+1.5); o2.stop(t+1.5);
+  let gen=0;
+  function keys(notes,t,vol){ // electric-piano chord, slightly strummed
+    notes.forEach((m,i)=>{
+      const tt=t+i*.018, o=ctx.createOscillator(), o2=ctx.createOscillator(), g=ctx.createGain(), f=ctx.createBiquadFilter();
+      o.type='sine'; o2.type='triangle'; o.frequency.value=mtof(m); o2.frequency.value=mtof(m)*2;
+      f.type='lowpass'; f.frequency.value=1600;
+      g.gain.setValueAtTime(0,tt); g.gain.linearRampToValueAtTime(vol,tt+.02); g.gain.exponentialRampToValueAtTime(.0001,tt+2.6);
+      const g2=ctx.createGain(); g2.gain.value=.12; o2.connect(g2); g2.connect(f); o.connect(f); f.connect(g); g.connect(musicBus);
+      const s=ctx.createGain(); s.gain.value=.35; g.connect(s); s.connect(mverb);
+      o.start(tt); o2.start(tt); o.stop(tt+2.7); o2.stop(tt+2.7);
+    });
+  }
+  function bass(m,t){const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=mtof(m);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.16,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.9);o.connect(g);g.connect(musicBus);o.start(t);o.stop(t+1)}
+  function kick(t){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(110,t);o.frequency.exponentialRampToValueAtTime(45,t+.18);g.gain.setValueAtTime(.32,t);g.gain.exponentialRampToValueAtTime(.0001,t+.28);o.connect(g);g.connect(musicBus);o.start(t);o.stop(t+.3)}
+  function hiss(t,{dur=.04,vol=.03,freq=8000,type='highpass'}={}){
+    const len=Math.ceil(ctx.sampleRate*dur),b=ctx.createBuffer(1,len,ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+    const s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();s.buffer=b;f.type=type;f.frequency.value=freq;
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f);f.connect(g);g.connect(musicBus);s.start(t);s.stop(t+dur);
   }
   function startMusic(){
-    if(!ctx||musicTimer)return;
-    nextBeat=ctx.currentTime+.15; step=0;
-    const eighth=60/80/2;
+    if(!ctx||!prefs.music)return;
+    stopMusic();
+    const my=++gen;
+    musicBus.gain.cancelScheduledValues(ctx.currentTime);
+    musicBus.gain.setTargetAtTime(.5,ctx.currentTime,.3);
+    let next=ctx.currentTime+.2, step=0;
     musicTimer=setInterval(()=>{
-      const prog=PROG[Math.min(typeof E!=='undefined'&&E?E.country:0,PROG.length-1)];
-      while(nextBeat<ctx.currentTime+.4){
-        const bar=Math.floor(step/8)%prog.length, i=step%8, chord=prog[bar];
-        if(i===0||i===4)pluck(chord[0]-12+(i===4?7:0),nextBeat,.09);
-        pluck(chord[PATTERN[i]],nextBeat,i%2?.035:.05);
-        if(i===6&&bar%2===1)pluck(chord[3]+12,nextBeat+eighth/2,.025);
-        nextBeat+=eighth*(i%2?.92:1.08); step++;
+      if(my!==gen)return;
+      const song=SONGS[Math.min(typeof E!=='undefined'&&E?E.country:0,SONGS.length-1)];
+      const six=60/song.bpm/4;
+      while(next<ctx.currentTime+.5){
+        const bar=Math.floor(step/16)%song.chords.length, i=step%16, ch=song.chords[bar];
+        const t=next+(i%2?six*.18:0); // swing
+        if(i===0)keys(ch,t,.045);
+        if(i===10)keys(ch.slice(1),t,.025);
+        if(i===0||i===8)bass(ch[0]-12,t);
+        if(i===0||i===7||i===10)kick(t);
+        if(i===4||i===12)hiss(t,{dur:.14,vol:.07,freq:1800,type:'bandpass'});
+        if(i%2===0)hiss(t,{vol:i%4===0?.025:.015});
+        if(song.shaker&&i%2===1)hiss(t,{dur:.06,vol:.012,freq:6000});
+        if(Math.random()<.08)hiss(t,{dur:.008,vol:.04,freq:3000}); // vinyl crackle
+        next+=six; step++;
       }
     },100);
   }
-  function stopMusic(){clearInterval(musicTimer);musicTimer=null}
+  function stopMusic(){
+    gen++; clearInterval(musicTimer); musicTimer=null;
+    if(ctx){musicBus.gain.cancelScheduledValues(ctx.currentTime);musicBus.gain.setTargetAtTime(0,ctx.currentTime,.03)}
+  }
   function set(k,v){
-    prefs[k]=v; save(); init();
-    if(k==='sfx')sfxBus.gain.setTargetAtTime(v?1:0,ctx.currentTime,.05);
-    if(k==='music'){musicBus.gain.setTargetAtTime(v?.55:0,ctx.currentTime,.2);if(v)unlock();else stopMusic()}
+    prefs[k]=v; save();
+    if(!init())return;
+    if(k==='sfx'){sfxBus.gain.cancelScheduledValues(ctx.currentTime);sfxBus.gain.setTargetAtTime(v?1:0,ctx.currentTime,.03)}
+    if(k==='music'){if(v){if(ctx.state==='suspended')ctx.resume();startMusic()}else stopMusic()}
   }
   document.addEventListener('pointerdown',unlock,true);
   document.addEventListener('visibilitychange',()=>{
@@ -1185,7 +1211,7 @@ function openSettings(){
   $('info-sheet').innerHTML=`<h2>Settings</h2>
     <div class="form">
       <div class="field"><label for="s-sfx">Sound effects<small>Cards, coins, Yaniv and Asaf</small></label><input type="checkbox" id="s-sfx"></div>
-      <div class="field"><label for="s-music">Music<small>A slow guitar from each city</small></label><input type="checkbox" id="s-music"></div>
+      <div class="field"><label for="s-music">Music<small>A chill lounge beat, different in each city</small></label><input type="checkbox" id="s-music"></div>
       <div class="field"><label>How to play<small>The rules in six lines</small></label><button class="btn" type="button" data-act="rules">Open</button></div>
       <div class="field"><label>Reset progress<small>Prototype only: coins, tickets and cards</small></label><button class="btn" type="button" data-act="reset">Reset</button></div>
     </div>
