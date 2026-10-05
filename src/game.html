@@ -305,6 +305,48 @@ details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px
 .choice-box{background:var(--table);border-radius:18px;padding:14px 18px;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .choice-cards{display:flex;gap:14px;--cw:76px}
 .choice-cards .card:hover{transform:translateY(-6px)}
+
+/* reveal */
+.reveal{position:absolute;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% 28%,rgba(23,70,79,.97),rgba(4,14,16,.99) 75%);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fadein .25s ease;cursor:pointer}
+@keyframes fadein{from{opacity:0}}
+.rv-box{width:100%;display:flex;flex-direction:column;gap:12px}
+.rv-call{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.rv-stamp{font-family:var(--display);font-size:40px;line-height:1.1;color:var(--accent);border:5px solid var(--accent);border-radius:14px;padding:0 .3em;transform:rotate(-6deg);animation:stamp .45s cubic-bezier(.2,1.5,.4,1) both}
+.rv-caller{display:flex;align-items:center;gap:8px;font-size:15px}
+.rv-t{font-family:var(--display);color:var(--accent);font-size:20px}
+.rv-cards{display:flex;gap:4px;--cw:34px;perspective:400px}
+.rv-cards.caller{--cw:40px}
+.rv-beat{text-align:center;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.rv-rows{display:flex;flex-direction:column;gap:8px}
+.rv-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:rgba(10,34,38,.85);opacity:.3;transform:scale(.97);transition:opacity .3s,transform .3s,box-shadow .3s,background .3s}
+.rv-row.on{opacity:1;transform:none}
+.rv-mid{display:flex;flex-direction:column;gap:6px;min-width:0}
+.rv-mid b{font-size:14px}
+.rv-score{text-align:right;min-width:56px}
+.rv-num{font-family:var(--display);font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.rv-tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;height:16px;margin-top:2px}
+.rv-row.safe .rv-num,.rv-row.safe .rv-tag{color:var(--muted)}
+.rv-row.caught{background:color-mix(in srgb,var(--bad) 22%,rgba(10,34,38,.92));box-shadow:0 0 0 2px var(--bad),0 0 34px color-mix(in srgb,var(--bad) 55%,transparent);animation:hit .4s ease}
+.rv-row.caught .rv-num,.rv-row.caught .rv-tag{color:var(--bad)}
+.rv-row.caught .rv-tag{font-family:var(--display);font-size:15px}
+@keyframes hit{30%{transform:scale(1.05)}}
+.card.flipin{animation:flipin .3s ease-out both}
+@keyframes flipin{from{transform:rotateY(90deg) translateY(-6px)}to{transform:none}}
+.rv-final{min-height:110px;text-align:center}
+.rv-big{font-family:var(--display);font-size:64px;line-height:1;color:var(--accent);text-shadow:0 0 34px color-mix(in srgb,var(--accent) 65%,transparent);animation:boomin .55s cubic-bezier(.2,1.6,.4,1) both}
+.rv-big.asaf{color:var(--bad);text-shadow:0 0 34px color-mix(in srgb,var(--bad) 65%,transparent)}
+.rv-big.asaf.good{color:var(--good);text-shadow:0 0 34px color-mix(in srgb,var(--good) 65%,transparent)}
+@keyframes boomin{from{transform:scale(2.8);opacity:0}}
+.rv-final p{margin:8px 0 0;font-weight:600;font-size:15px}
+.rv-quote{margin-top:6px;color:var(--muted);font-size:13px}
+.rv-quote q{font-style:italic}
+.rv-skip{text-align:center;font-size:10.5px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.reveal.done .rv-skip{visibility:hidden}
+.phone.shake{animation:shake .45s ease}
+@keyframes shake{20%{transform:translate(-9px,3px)}40%{transform:translate(8px,-4px)}60%{transform:translate(-5px,2px)}80%{transform:translate(3px,-1px)}}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:36}
+.confetti i{position:absolute;top:-14px;width:8px;height:12px;border-radius:2px;animation:fall var(--d) cubic-bezier(.3,.6,.6,1) var(--dl) forwards}
+@keyframes fall{to{transform:translate(var(--x),920px) rotate(var(--r))}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 
@@ -365,6 +407,7 @@ details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px
 
   <div class="ov" id="ov-round" hidden><div class="sheet" id="round-sheet" role="dialog" aria-modal="true"></div></div>
   <div class="ov" id="ov-info" hidden data-act="close-bg"><div class="sheet" id="info-sheet" role="dialog" aria-modal="true"></div></div>
+  <div class="reveal" id="reveal" hidden></div>
   <div class="stamp" id="stamp" hidden><span id="stamp-t">Yaniv!</span></div>
   <div class="toast" id="toast" hidden></div>
 </div>
@@ -610,6 +653,24 @@ const AUD=(()=>{
       if(!ctx)return; const t=ctx.currentTime+.96,o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=6;g.gain.value=8;o.connect(g);o.start(t);o.stop(t+.9);
     },
     fanfare(){SFX.yaniv();setTimeout(SFX.win,700)},
+    callHit(){tone(70,{dur:.5,vol:.35,to:40});noise({dur:.5,vol:.12,freq:6000,q:.4,type:'highpass'});[196,247,294].forEach(f=>tone(f,{dur:.45,type:'sawtooth',vol:.04,lp:1400,send:.3}))},
+    flip(){noise({dur:.05,vol:.14,freq:3200,q:1.2});tone(1800,{dur:.025,type:'square',vol:.015})},
+    tick(p=0){tone(500+p*1000,{dur:.05,type:'triangle',vol:.035})},
+    safe(){tone(330,{dur:.15,type:'triangle',vol:.04});tone(262,{dur:.2,type:'triangle',vol:.03,at:.08})},
+    boom(){tone(90,{dur:.7,vol:.4,to:35});noise({dur:.6,vol:.28,freq:500,type:'lowpass',q:.3});noise({dur:.35,vol:.1,freq:5000,type:'highpass',q:.3,at:.02})},
+    riser(sec=2){
+      if(!ctx)return null;
+      const t=ctx.currentTime,o=ctx.createOscillator(),o2=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();
+      o.type='sawtooth';o2.type='sawtooth';o.frequency.setValueAtTime(110,t);o.frequency.exponentialRampToValueAtTime(440,t+sec);
+      o2.frequency.setValueAtTime(111.5,t);o2.frequency.exponentialRampToValueAtTime(446,t+sec);
+      f.type='lowpass';f.frequency.setValueAtTime(400,t);f.frequency.exponentialRampToValueAtTime(2400,t+sec);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.045,t+sec);
+      o.connect(f);o2.connect(f);f.connect(g);g.connect(sfxBus);o.start(t);o2.start(t);
+      let stopped=false;
+      const stop=()=>{if(stopped)return;stopped=true;const n=ctx.currentTime;g.gain.cancelScheduledValues(n);g.gain.setTargetAtTime(0,n,.04);o.stop(n+.3);o2.stop(n+.3)};
+      setTimeout(stop,(sec+.4)*1000);
+      return stop;
+    },
   };
   // ---- background music: a soft lo-fi lounge loop per city ----
   // Everything musical (notes, drums, echo) goes through musicBus, so muting it is instant and total.
@@ -680,7 +741,7 @@ const AUD=(()=>{
   });
   return {SFX,set,prefs:()=>prefs,unlock};
 })();
-const SFX=new Proxy({}, {get:(_,k)=>(...a)=>{try{AUD.SFX[k]?.(...a)}catch(e){}}});
+const SFX=new Proxy({}, {get:(_,k)=>(...a)=>{try{return AUD.SFX[k]?.(...a)}catch(e){}}});
 function renderMute(){document.querySelectorAll('.mutebtn').forEach(b=>{const p=AUD.prefs(),on=p.sfx||p.music;b.innerHTML=on?SPK_ON:SPK_OFF;b.setAttribute('aria-label',on?'Mute sound':'Turn sound on');b.classList.toggle('off',!on)})}
 
 const SPK_ON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
@@ -882,8 +943,6 @@ function callYaniv(pi){
   const others=active().filter(p=>p!==caller);
   const asafers=others.filter(p=>total(p.hand)<=t).sort((a,b)=>total(a.hand)-total(b.hand));
   const asaf=asafers.length>0;
-  if(!caller.human)say(caller,asaf?'burned':'yaniv');
-  if(asaf&&!asafers[0].human)say(asafers[0],'asaf');
   const base={caller:caller.name,callerHuman:caller.human,t,asaf,asafer:asaf?asafers[0].name:'',asaferT:asaf?total(asafers[0].hand):0};
   if(placementMode()){
     const rest=others.filter(p=>!asafers.includes(p)).sort((a,b)=>total(a.hand)-total(b.hand));
@@ -922,12 +981,8 @@ function callYaniv(pi){
     S.starter=asaf?S.players.indexOf(asafers[0]):pi;
     S.phase=(S.players[0].out||active().length<=1)?'gameOver':'roundEnd';
   }
-  S.stamping=true; render();
-  showStamp('Yaniv!',false); SFX.yaniv();
-  setTimeout(()=>{
-    if(asaf){showStamp('Asaf!',true);SFX.asaf()}
-    setTimeout(()=>{$('stamp').hidden=true;S.stamping=false;render();resultSound()},asaf?1200:600);
-  },900);
+  S.stamping=true; S.sel=new Set(); render();
+  runReveal(caller,t,others,asafers,()=>{S.stamping=false;render();setTimeout(resultSound,150)});
 }
 function showStamp(text,asaf){const st=$('stamp');st.hidden=false;st.classList.toggle('asaf',asaf);const t=$('stamp-t');t.textContent=text;t.style.animation='none';void t.offsetWidth;t.style.animation=''}
 function shouldCall(p,t){
@@ -956,6 +1011,99 @@ function say(p,kind){
   p.said=pickOne(lines);
   clearTimeout(bubbleTimers.get(p.name));
   bubbleTimers.set(p.name,setTimeout(()=>{p.said='';if(S.screen==='table')renderOpps()},2800));
+}
+
+/* ================= the reveal: Yaniv / Asaf moment ================= */
+let revealTimers=[];
+const rt=(fn,ms)=>revealTimers.push(setTimeout(fn,ms));
+const reducedMotion=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function shake(){const ph=$('phone');ph.classList.remove('shake');void ph.offsetWidth;ph.classList.add('shake');setTimeout(()=>ph.classList.remove('shake'),500)}
+function confetti(){
+  if(reducedMotion())return;
+  const box=document.createElement('div'); box.className='confetti';
+  const cols=['#f2b33d','#f7c94f','#74d6a0','#7cc6e8','#f08a6c','#fbf6ea'];
+  for(let i=0;i<70;i++){
+    const p=document.createElement('i');
+    p.style.cssText=`left:${Math.random()*100}%;background:${cols[i%cols.length]};--x:${(Math.random()-.5)*160}px;--r:${(Math.random()-.5)*900}deg;--d:${1.4+Math.random()*1.2}s;--dl:${Math.random()*.35}s`;
+    box.appendChild(p);
+  }
+  $('phone').appendChild(box); setTimeout(()=>box.remove(),3200);
+}
+function quip(p,kind){const lines=p.bot?.q?.[kind];return lines?`<div class="rv-quote"><q>${pickOne(lines)}</q> <span>— ${p.name}</span></div>`:''}
+function runReveal(caller,t,others,asafers,done){
+  revealTimers.forEach(clearTimeout); revealTimers=[];
+  const order=[...others].sort((a,b)=>total(b.hand)-total(a.hand)); // highest first, lowest (most dangerous) last
+  const ov=$('reveal');
+  const nm=p=>p.human?'You':p.name;
+  const row=(p,i)=>`<div class="rv-row" id="rv-${i}" style="--av:${p.color}">
+      <div class="av">${p.name[0]}</div>
+      <div class="rv-mid"><b>${nm(p)}</b><div class="rv-cards">${p.hand.map(()=>'<div class="card back"></div>').join('')}</div></div>
+      <div class="rv-score"><div class="rv-num" id="rvn-${i}">?</div><div class="rv-tag" id="rvt-${i}"></div></div>
+    </div>`;
+  ov.innerHTML=`<div class="rv-box">
+      <div class="rv-call"><span class="rv-stamp">Yaniv!</span>
+        <div class="rv-caller" style="--av:${caller.color}"><div class="av">${caller.name[0]}</div><span><b>${nm(caller)}</b> called at <b class="rv-t">${t}</b></span></div>
+        <div class="rv-cards caller">${caller.hand.map(c=>cardHTML(c)).join('')}</div>
+      </div>
+      <div class="rv-beat">Who has ${t} or less?</div>
+      <div class="rv-rows">${order.map(row).join('')}</div>
+      <div class="rv-final" id="rv-final"></div>
+      <div class="rv-skip">Tap to skip</div>
+    </div>`;
+  ov.hidden=false;
+  SFX.callHit();
+  let at=1000, finished=false, stopRiser=null;
+  rt(()=>{stopRiser=SFX.riser(Math.max(1,(at-1000)/1000))},1000);
+  const showRow=(p,i,silent)=>{
+    const el=$('rv-'+i); el.classList.add('on');
+    el.querySelectorAll('.rv-cards .card').forEach((slot,k)=>{slot.outerHTML=cardHTML(p.hand[k],{cls:silent?'':'flipin'})});
+    $('rvn-'+i).textContent=total(p.hand);
+  };
+  const verdict=(p,i,silent)=>{
+    const caught=total(p.hand)<=t, el=$('rv-'+i);
+    el.classList.add(caught?'caught':'safe');
+    $('rvt-'+i).textContent=caught?'Asaf!':'safe';
+    if(!silent){if(caught){SFX.boom();shake()}else SFX.safe()}
+  };
+  order.forEach((p,i)=>{
+    const ht=total(p.hand), n=p.hand.length, start=at, last=i===order.length-1;
+    const flipGap=last?220:130, countDur=n*flipGap+200;
+    rt(()=>$('rv-'+i).classList.add('on'),start);
+    p.hand.forEach((c,k)=>rt(()=>{
+      const slot=$('rv-'+i).querySelectorAll('.rv-cards .card')[k];
+      if(slot)slot.outerHTML=cardHTML(c,{cls:'flipin'}); SFX.flip();
+    },start+200+k*flipGap));
+    const steps=Math.max(1,Math.min(ht,14));
+    for(let s=1;s<=steps;s++)rt(()=>{$('rvn-'+i).textContent=Math.round(ht*s/steps);SFX.tick(s/steps)},start+200+countDur*s/steps);
+    const vAt=start+200+countDur+(last?500:250);
+    rt(()=>verdict(p,i,false),vAt);
+    at=vAt+(last?150:450);
+  });
+  rt(()=>{if(stopRiser)stopRiser()},at);
+  rt(finale,at+250);
+  function finale(){
+    if(finished)return; finished=true;
+    const asaf=asafers.length>0, f=$('rv-final'), me=S.players[0];
+    if(asaf){
+      const a=asafers[0], good=a===me;
+      f.innerHTML=`<div class="rv-big asaf ${good?'good':''}">ASAF!</div><p>${good?`You caught ${caller.name}!`:`${nm(a)} caught ${caller.human?'you':caller.name}.`}</p>${a.human?quip(caller,'burned'):quip(a,'asaf')}`;
+      if(good){SFX.yaniv();confetti()}else SFX.asaf();
+    } else {
+      const good=caller===me;
+      f.innerHTML=`<div class="rv-big">YANIV!</div><p>${good?`Nobody beat your ${t}.`:`Nobody beat ${caller.name}'s ${t}.`}</p>${caller.human?'':quip(caller,'yaniv')}`;
+      SFX.yaniv(); if(good)confetti();
+    }
+    ov.classList.add('done');
+    rt(close,1900);
+  }
+  function close(){revealTimers.forEach(clearTimeout);revealTimers=[];ov.hidden=true;ov.classList.remove('done');ov.onclick=null;done()}
+  ov.onclick=()=>{
+    if(finished){close();return}
+    revealTimers.forEach(clearTimeout); revealTimers=[];
+    if(stopRiser)stopRiser();
+    order.forEach((p,i)=>{showRow(p,i,true);verdict(p,i,true)});
+    finale();
+  };
 }
 
 /* ================= deck & market ================= */

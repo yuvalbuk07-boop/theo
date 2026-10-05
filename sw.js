@@ -1,5 +1,5 @@
 // Offline support: cache the app shell, keep Google Fonts once fetched.
-const CACHE = 'yaniv-v8';
+const CACHE = 'yaniv-v9';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
