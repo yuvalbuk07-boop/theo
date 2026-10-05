@@ -1,5 +1,5 @@
 // Offline support: cache the app shell, keep Google Fonts once fetched.
-const CACHE = 'theo-v12';
+const CACHE = 'theo-v13';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
