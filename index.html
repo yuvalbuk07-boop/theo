@@ -322,6 +322,28 @@ details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px
 .choice-cards{display:flex;gap:14px;--cw:76px}
 .choice-cards .card:hover{transform:translateY(-6px)}
 
+
+/* lesson */
+.coach{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--card);color:var(--black);border-radius:14px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.coach .av{flex:none;width:30px;height:30px;font-size:13px;color:var(--black)}
+.coach-txt{font-size:14px;line-height:1.4;font-weight:500}
+.coach-txt b{color:#b5650d;font-weight:700}
+.coach-txt .btn{margin-left:6px;vertical-align:1px}
+.card.tut,.deck.tut .card,.yaniv.tut{animation:tutpulse 1.1s ease-in-out infinite}
+@keyframes tutpulse{0%,100%{box-shadow:0 0 0 3px var(--accent),0 0 0 0 color-mix(in srgb,var(--accent) 50%,transparent)}50%{box-shadow:0 0 0 3px var(--accent),0 0 0 12px transparent}}
+.hand .card.dimc{filter:brightness(.55)}
+.tut-note{border-radius:12px;padding:10px 12px;margin-bottom:12px;background:color-mix(in srgb,var(--bad) 12%,transparent);font-size:13.5px;line-height:1.45}
+.tut-note b{color:var(--bad)}
+.gift{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:12px;border-radius:14px;background:linear-gradient(160deg,#1d5560,#123a41);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.gift small{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.gift b{font-family:var(--display);font-size:20px}
+.gift p{margin:2px 0 4px;font-size:12.5px;color:var(--muted)}
+.gift span{font-size:12px;font-weight:700;color:var(--good)}
+.welcome{text-align:center}
+.welcome .av.big{margin:4px auto 10px;width:58px;height:58px;font-size:24px}
+.welcome p{color:var(--muted)}
+.welcome p b{color:var(--ink)}
+.foot.col{flex-direction:column}
 /* reveal */
 .reveal{position:absolute;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% 28%,rgba(23,70,79,.97),rgba(4,14,16,.99) 75%);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fadein .25s ease;cursor:pointer}
 @keyframes fadein{from{opacity:0}}
@@ -769,6 +791,7 @@ function resultSound(){
   if(S.mode==='sprint'){ if(r.place===0)SFX.win(); else if(r.pay+r.bonus>0&&r.place<3)SFX.coins(); else SFX.lose(); }
   else if(S.mode==='champion'){ r.won?SFX.fanfare():SFX.lose(); }
   else if(S.mode==='duel'){ r.won?SFX.win():SFX.lose(); }
+  else if(S.mode==='tutorial'){ SFX.win(); }
   else { const me=r.rows.find(x=>x.human); if(me&&me.add===0)SFX.coins(); else if(me&&me.caller&&r.asaf)SFX.lose(); }
 }
 
@@ -802,7 +825,7 @@ function perkArt(id){
 }
 
 /* ================= economy (saved on this device) ================= */
-function freshEcon(){return {tickets:TICKET_CAP,lastRegen:Date.now(),coins:2000,country:0,owned:[],equipped:[],stamps:[],dailyDay:'',adsDay:'',ads:0,mult:1,stake:1000,rival:0}}
+function freshEcon(){return {tutorialDone:false,tickets:TICKET_CAP,lastRegen:Date.now(),coins:2000,country:0,owned:[],equipped:[],stamps:[],dailyDay:'',adsDay:'',ads:0,mult:1,stake:1000,rival:0}}
 function loadEcon(){try{const e=JSON.parse(localStorage.getItem('yaniv-econ')||'null');if(e&&e.owned)return {...freshEcon(),...e}}catch(err){}return freshEcon()}
 function saveEcon(){try{localStorage.setItem('yaniv-econ',JSON.stringify(E))}catch(err){}}
 function regen(){
@@ -943,7 +966,7 @@ function applyMove(pi,ids,take){
   if(p.human){SFX.drop();setTimeout(take>=0?SFX.take:SFX.draw,140)}else{SFX.drop(.5);if(take>=0)setTimeout(SFX.take,120)}
   const src=take>=0?`took ${label(got)} from the pile`:(p.human&&got?`drew ${label(got)}`:'drew from the deck');
   addLog(`${p.name} dropped ${describe(v)}, ${src}.`);
-  if(p.human){S.sel=new Set();S.fresh=got?got.id:null}
+  if(p.human){S.sel=new Set();S.fresh=got?got.id:null;if(S.mode==='tutorial')S.tut.step++}
   else{S.fresh=null;if(take>=0&&val(got)<=3&&Math.random()<.5)say(p,'take')}
   S.turn=nextActive(pi);
   if(S.turn===0&&S.players[0].hand.length)setTimeout(()=>{if(myTurn())SFX.turn(total(S.players[0].hand)<=myYanivAt())},350);
@@ -962,7 +985,9 @@ function callYaniv(pi){
   const asafers=others.filter(p=>total(p.hand)<=t).sort((a,b)=>total(a.hand)-total(b.hand));
   const asaf=asafers.length>0;
   const base={caller:caller.name,callerHuman:caller.human,t,asaf,asafer:asaf?asafers[0].name:'',asaferT:asaf?total(asafers[0].hand):0};
-  if(placementMode()){
+  if(S.mode==='tutorial'){
+    S.result={...base,rows:[]}; finishTutorial(); S.phase='tutorialEnd';
+  } else if(placementMode()){
     const rest=others.filter(p=>!asafers.includes(p)).sort((a,b)=>total(a.hand)-total(b.hand));
     const order=asaf?[...asafers,...rest,caller]:[caller,...rest];
     const me=S.players[0], place=order.indexOf(me);
@@ -1013,6 +1038,7 @@ function shouldCall(p,t){
 function botTurn(){
   if(S.phase!=='play'||S.screen!=='table'||S.choice)return;
   const pi=S.turn,p=S.players[pi]; if(p.human)return;
+  if(S.mode==='tutorial'){applyMove(pi,[NICO_MOVES[S.tut.nico++]],-1);return}
   const t=total(p.hand);
   if(t<=S.g.yanivAt&&shouldCall(p,t))return callYaniv(pi);
   const w=p.bot.w, L=S.last, picks=S.lastType==='run'?[0,L.length-1]:L.map((_,i)=>i); let best=null;
@@ -1122,6 +1148,73 @@ function runReveal(caller,t,others,asafers,done){
     order.forEach((p,i)=>{showRow(p,i,true);verdict(p,i,true)});
     finale();
   };
+}
+
+/* ================= first-game lesson with Nico ================= */
+const NICO={name:'Nico',city:'Hostel owner',color:'#9fd36b',style:'calc',w:.5,
+  q:{burned:['Ha! You learn fast.'],asaf:['Asaf!'],yaniv:['Yaniv!'],take:['Thanks!']}};
+const NICO_MOVES=['nJd','n7s','nQc'];
+const TUT=[
+  {need:'next',  text:'Lowest hand wins. Yours adds up to <b>32</b>. Kings count 10, Aces count 1.'},
+  {need:'select',ids:['tKs','tKh'], text:'Two Kings make a <b>pair</b>. Tap both Kings to drop them together.'},
+  {need:'pile',  idx:0, text:'Now take one card. Grab the <b>3♥</b> from the pile, it’s low.'},
+  {need:'select',ids:['t9c'], text:'Nico dropped a Jack. Your turn: drop your highest card, the <b>9</b>.'},
+  {need:'deck',  text:'This time draw from the <b>deck</b>. You never know what’s coming.'},
+  {need:'select',ids:['t2h','p3h','d4h'], text:'<b>2♥ 3♥ 4♥</b> is a run: 3 or more in a row, same suit. Drop all three.'},
+  {need:'deck',  text:'Nico dropped a 7. Too high to take. Draw from the <b>deck</b>.'},
+  {need:'yaniv', text:'Your hand is <b>1</b>. With 7 or less you can call Yaniv. <b>Call it!</b>'},
+];
+const tutStep=()=>S.mode==='tutorial'?TUT[S.tut.step]:null;
+function startTutorial(){
+  clearTimeout(timer);
+  $('ov-info').hidden=true; $('ov-round').hidden=true;
+  const TC=(id,r,s)=>({id,r,s});
+  S.g={...DEFAULT_RULES,yanivAt:7,handSize:5};
+  seat([{...NICO,human:false,bot:NICO}]);
+  Object.assign(S,{mode:'tutorial',perks:[],used:{},choice:null,cIdx:0,mult:1,tut:{step:0,nico:0}});
+  const me=[TC('tKs',13,'S'),TC('tKh',13,'H'),TC('t9c',9,'C'),TC('t2h',2,'H'),TC('tAs',1,'S')];
+  const nico=[TC('nJd',11,'D'),TC('n7s',7,'S'),TC('nQc',12,'C'),TC('n5c',5,'C'),TC('n6d',6,'D')];
+  const draws=[TC('d3s',3,'S'),TC('d4h',4,'H'),TC('d2c',2,'C'),TC('dJk',0,'J'),TC('d4d',4,'D')]; // in the order they get drawn
+  const pile=TC('p3h',3,'H');
+  const taken=new Set([...me,...nico,...draws,pile].map(c=>c.r+c.s));
+  const filler=shuffle(newDeck()).filter(c=>!taken.has(c.r+c.s));
+  S.deck=[...filler,...draws.slice().reverse()]; S.buried=[];
+  S.players[0].hand=me; S.players[1].hand=nico;
+  S.last=[pile]; S.lastType='single'; S.lastBy=-1;
+  S.turn=0; S.phase='play'; S.sel=new Set(); S.fresh=null; S.result=null; S.stamping=false; S.log=[];
+  S.screen='table'; addLog('Nico deals you in.'); SFX.deal(); render();
+}
+function tutCardClick(id){
+  const st=tutStep();
+  if(S.turn!==0||!st||st.need!=='select'||!st.ids.includes(id)){SFX.nope();return}
+  if(S.sel.has(id)){S.sel.delete(id);SFX.untap()}else{S.sel.add(id);SFX.tap()}
+  if(S.sel.size===st.ids.length&&st.ids.every(x=>S.sel.has(x)))S.tut.step++;
+  render();
+}
+function finishTutorial(){
+  E.tutorialDone=true;
+  if(!E.owned.includes('tram')){E.owned.push('tram');if(E.equipped.length<SLOTS)E.equipped.push('tram')}
+  saveEcon();
+}
+function renderTutorialEnd(){
+  const r=S.result, nicoT=total(S.players[1].hand);
+  $('round-sheet').innerHTML=`<h2>You won your first hand!</h2>
+    <p>Nico had ${nicoT}. Nobody matched your ${r.t}, so you win.</p>
+    <div class="tut-note"><b>Watch out for Asaf.</b> If Nico had ${r.t} or less, he would have caught you, and you’d take the penalty instead.</div>
+    <div class="gift"><div class="perk-art">${perkArt('tram')}</div><div><small>Welcome gift</small><b>Tram 28</b><p>${PERKS.tram.text}</p><span>Added to your deck</span></div></div>
+    <div class="foot"><button class="btn primary wide" type="button" data-act="tutdone">Play in Lisbon</button></div>`;
+}
+function openWelcome(){
+  S.welcomeShown=true;
+  $('info-sheet').innerHTML=`<div class="welcome">
+      <div class="av big" style="--av:${NICO.color}">N</div>
+      <h2>Welcome to the hostel</h2>
+      <p>I’m Nico, I run the place. Every night the travelers here play <b>Yaniv</b>, the card game backpackers carry around the world.</p>
+      <p>Let me teach you in one quick hand. It takes about a minute.</p>
+      <div class="foot col"><button class="btn primary wide" type="button" data-act="tutstart">Teach me</button>
+      <button class="btn wide" type="button" data-act="tutskip">I know Yaniv, skip</button></div>
+    </div>`;
+  $('ov-info').hidden=false;
 }
 
 /* ================= deck & market ================= */
@@ -1254,6 +1347,7 @@ function tableTitle(){
   const perks=S.perks.length?` · ${S.perks.map(k=>PERKS[k].name+((k==='tram'||k==='pick')&&S.used[k]?' (used)':'')).join(', ')}`:'';
   if(S.mode==='sprint')return `${c.city} · bet ${S.mult}<small>1st wins ${fmt(c.reward*S.mult)}${perks}</small>`;
   if(S.mode==='champion')return `Champion of ${c.city}<small>Finish 1st to earn your stamp${perks}</small>`;
+  if(S.mode==='tutorial')return `Lesson · the hostel table<small>Nico teaches you in one hand</small>`;
   if(S.mode==='duel')return `Duel vs ${S.players[1].name}<small>Pot ${fmt(S.stake*2)} coins · winner takes ${fmt(S.stake*1.9)}</small>`;
   return `Friends table<small>You have ${me.score} · out above ${S.g.endScore}</small>`;
 }
@@ -1263,10 +1357,12 @@ function renderTable(){
   renderOpps();
   const deck=$('deck'), peek=has('light')&&S.deck.length?S.deck.at(-1):null;
   deck.innerHTML=(peek?cardHTML(peek)+'<span class="peek">Next</span>':`<div class="card back"></div>`)+`<span class="count">${S.deck.length}</span>`;
-  deck.classList.toggle('go',canDraw); deck.disabled=!canDraw;
+  const ts0=tutStep();
+  deck.classList.toggle('go',canDraw&&(!ts0||ts0.need==='deck')); deck.disabled=!canDraw;
+  deck.classList.toggle('tut',!!(ts0&&turn&&ts0.need==='deck'));
   const picks=new Set(pickable());
   $('pile').innerHTML=S.last.map((c,i)=>{
-    const can=picks.has(i), cls=turn?(can?(canDraw?'pick':'hint'):'dim'):'';
+    const can=picks.has(i), cls=(turn?(can?(canDraw?'pick':'hint'):'dim'):'')+(ts0&&turn&&ts0.need==='pile'&&ts0.idx===i?' tut':'');
     return cardHTML(c,{tag:'button',cls,attrs:`data-act="pile" data-i="${i}" ${canDraw&&can?'':'disabled'}`});
   }).join('');
   $('pile-lbl').innerHTML=S.lastBy<0?'Starting card':`<b>${S.players[S.lastBy].name}</b> dropped`;
@@ -1274,9 +1370,11 @@ function renderTable(){
   const t=total(me.hand), ya=myYanivAt(), canCall=turn&&t<=ya;
   const tc=$('total'); tc.textContent=`Your hand: ${t}`; tc.classList.toggle('ok',t<=ya);
   $('sortbtn').textContent=S.sortBy==='suit'?'Sort: suit':'Sort: rank';
-  const yb=$('yaniv'); yb.disabled=!canCall; yb.classList.toggle('ready',canCall&&!S.sel.size);
+  const yb=$('yaniv'); yb.disabled=!canCall; yb.classList.toggle('ready',canCall&&!S.sel.size); yb.classList.toggle('tut',!!(ts0&&turn&&ts0.need==='yaniv'));
   let msg;
-  if(S.phase!=='play') msg='';
+  const ts=tutStep();
+  if(ts&&S.phase==='play') msg=`<div class="coach"><div class="av" style="--av:${NICO.color}">N</div><div class="coach-txt">${S.turn===0?ts.text:'Nico is playing…'}${ts.need==='next'&&S.turn===0?' <button class="btn primary sm" type="button" data-act="tutnext">Got it</button>':''}</div></div>`;
+  else if(S.phase!=='play') msg='';
   else if(S.choice) msg='<b>Tram 28:</b> keep one of these two cards.';
   else if(!turn) msg=`${S.players[S.turn].name} is playing…`;
   else if(!cards.length) msg=canCall?`<b>Your hand is ${t}. Call Yaniv!</b> Or keep going to get lower.`:`<b>Your turn.</b> Tap cards to drop. Get your hand to ${ya} or less, then call Yaniv.`;
@@ -1285,12 +1383,13 @@ function renderTable(){
   $('status').innerHTML=msg;
   const hand=sortHand(me.hand), h=$('hand');
   h.style.setProperty('--n',Math.max(hand.length,5));
-  h.innerHTML=hand.map(c=>cardHTML(c,{tag:'button',cls:(S.sel.has(c.id)?'sel ':'')+(S.fresh===c.id?'fresh':''),attrs:`data-act="card" data-id="${c.id}" aria-pressed="${S.sel.has(c.id)}" ${S.phase==='play'?'':'disabled'}`})).join('');
+  const tutIds=ts0&&turn&&ts0.need==='select'?ts0.ids:null;
+  h.innerHTML=hand.map(c=>cardHTML(c,{tag:'button',cls:(S.sel.has(c.id)?'sel ':'')+(S.fresh===c.id?'fresh ':'')+(tutIds?(tutIds.includes(c.id)?(S.sel.has(c.id)?'':'tut'):'dimc'):''),attrs:`data-act="card" data-id="${c.id}" aria-pressed="${S.sel.has(c.id)}" ${S.phase==='play'?'':'disabled'}`})).join('');
   const ch=$('choice'); ch.hidden=!S.choice;
   if(S.choice)ch.innerHTML=`<div class="choice-box"><b>Tram 28 · keep one</b><div class="choice-cards">${S.choice.map((c,i)=>cardHTML(c,{tag:'button',attrs:`data-act="choose" data-i="${i}"`})).join('')}</div></div>`;
-  const showRound=['roundEnd','gameOver','matchEnd'].includes(S.phase)&&!S.stamping;
+  const showRound=['roundEnd','gameOver','matchEnd','tutorialEnd'].includes(S.phase)&&!S.stamping;
   $('ov-round').hidden=!showRound;
-  if(showRound) S.phase==='matchEnd'?renderMatchResult():renderResult();
+  if(showRound) S.phase==='tutorialEnd'?renderTutorialEnd():S.phase==='matchEnd'?renderMatchResult():renderResult();
 }
 function headline(r){
   const callerName=r.callerHuman?'You':r.caller;
@@ -1360,6 +1459,7 @@ function openSettings(){
     <div class="form">
       <div class="field"><label for="s-sfx">Sound effects<small>Cards, coins, Yaniv and Asaf</small></label><input type="checkbox" id="s-sfx"></div>
       <div class="field"><label for="s-music">Music<small>A chill lounge beat, different in each city</small></label><input type="checkbox" id="s-music"></div>
+      <div class="field"><label>Lesson with Nico<small>Replay the one-hand tutorial</small></label><button class="btn" type="button" data-act="tutstart">Play</button></div>
       <div class="field"><label>How to play<small>The rules in six lines</small></label><button class="btn" type="button" data-act="rules">Open</button></div>
       <div class="field"><label>Reset progress<small>Prototype only: coins, tickets and cards</small></label><button class="btn" type="button" data-act="reset">Reset</button></div>
     </div>
@@ -1377,7 +1477,7 @@ function render(){
   for(const k of ['play','deck','friends','table'])$('scr-'+k).hidden=k!==scr;
   for(const k of ['play','deck','friends'])$('nav-'+k).setAttribute('aria-current',k===scr?'page':'false');
   renderEcon(); renderMute();
-  if(scr==='play')renderPlay();
+  if(scr==='play'){renderPlay();if(!E.tutorialDone&&!S.welcomeShown)openWelcome()}
   else if(scr==='deck')renderDeck();
   else if(scr==='friends')renderFriends();
   else renderTable();
@@ -1390,10 +1490,14 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]'); if(!el)return;
   const act=el.dataset.act;
   if(act==='close-bg'){if(e.target===el)el.hidden=true;return}
+  if(act==='card'&&S.mode==='tutorial'&&S.screen==='table'){if(S.phase==='play')tutCardClick(el.dataset.id);return}
   if(act==='card'){if(S.phase!=='play')return;const id=el.dataset.id;if(S.sel.has(id)){S.sel.delete(id);SFX.untap()}else{S.sel.add(id);SFX.tap()}S.fresh=null;render()}
+  else if(act==='deck'&&tutStep()&&tutStep().need!=='deck'){SFX.nope()}
   else if(act==='deck'){const {v}=selection();if(myTurn()&&v)applyMove(0,[...S.sel],-1);else if(myTurn())SFX.nope()}
+  else if(act==='pile'&&tutStep()&&tutStep().need!=='pile'){SFX.nope()}
   else if(act==='pile'){const {v}=selection();const i=+el.dataset.i;if(myTurn()&&v&&pickable().includes(i))applyMove(0,[...S.sel],i)}
   else if(act==='choose'){if(S.choice)chooseTram(+el.dataset.i)}
+  else if(act==='yaniv'&&tutStep()&&tutStep().need!=='yaniv'){SFX.nope()}
   else if(act==='yaniv'){if(myTurn()&&total(S.players[0].hand)<=myYanivAt()){S.sel=new Set();callYaniv(0)}}
   else if(act==='sort'){S.sortBy=S.sortBy==='suit'?'rank':'suit';render()}
   else if(act==='next'){S.round++;startRound()}
@@ -1414,6 +1518,10 @@ document.addEventListener('click',e=>{
   else if(act==='reset'){if(!resetArmed){resetArmed=true;el.textContent='Tap again';return}E=freshEcon();saveEcon();$('ov-info').hidden=true;goTab('play');toast('Progress reset.')}
   else if(act==='rules'){openRules()}
   else if(act==='settings'){openSettings()}
+  else if(act==='tutnext'){S.tut.step++;SFX.click();render()}
+  else if(act==='tutstart'){startTutorial()}
+  else if(act==='tutskip'){E.tutorialDone=true;saveEcon();$('ov-info').hidden=true}
+  else if(act==='tutdone'){$('ov-round').hidden=true;goTab('play');toast('Win rounds to earn coins, then spend them in the Deck tab.')}
   else if(act==='mute'){const p=AUD.prefs(),on=p.sfx||p.music;AUD.set('sfx',!on);AUD.set('music',!on);renderMute();if(!on)SFX.click()}
   else if(act==='close'){el.closest('.ov').hidden=true}
 });
