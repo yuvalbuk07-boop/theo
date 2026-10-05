@@ -66,6 +66,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 @keyframes bump{40%{transform:scale(1.15)}}
 .ic-ticket{width:18px;height:12px;flex:none;background:radial-gradient(circle at 0 50%,transparent 3px,var(--accent) 3.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% 50%,transparent 3px,var(--accent) 3.5px) right/51% 100% no-repeat}
 .ic-coin{width:14px;height:14px;flex:none;border-radius:50%;background:var(--coin);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--coin) 60%,#7a5300)}
+.iconbtn.off{color:var(--muted)}
 .iconbtn{width:34px;height:34px;border-radius:50%;border:0;background:var(--panel);cursor:pointer;display:grid;place-items:center;font-size:16px}
 
 /* bottom nav */
@@ -330,6 +331,7 @@ details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px
     <div class="brand">Yaniv</div>
     <div class="rchip" id="r-tix" title="Travel tickets"><span class="ic-ticket"></span><span id="r-tix-n"></span><small id="r-tix-t"></small></div>
     <div class="rchip" id="r-coin" title="Coins"><span class="ic-coin"></span><span id="r-coin-n"></span></div>
+    <button class="iconbtn mutebtn" type="button" data-act="mute" aria-label="Mute sound"></button>
     <button class="iconbtn" type="button" data-act="settings" aria-label="Settings">⚙︎</button>
   </header>
 
@@ -341,6 +343,7 @@ details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px
       <div class="tbar">
         <button class="iconbtn" type="button" data-act="leave" aria-label="Leave the table">✕</button>
         <div class="ttl" id="tbar-ttl"></div>
+        <button class="iconbtn mutebtn" type="button" data-act="mute" aria-label="Mute sound"></button>
         <button class="iconbtn" type="button" data-act="rules" aria-label="How to play">?</button>
       </div>
       <div class="table">
@@ -548,6 +551,140 @@ function sceneSVG(ci,levels,{interactive=false,id='s'}={}){
   return s+'</svg>';
 }
 
+/* ================= sound (synthesized, no audio files) ================= */
+const AUD=(()=>{
+  let ctx=null, master, sfxBus, musicBus, verb, musicTimer=null, nextBeat=0, step=0;
+  let prefs={sfx:true,music:true};
+  try{prefs={...prefs,...JSON.parse(localStorage.getItem('yaniv-sound')||'{}')}}catch(e){}
+  const save=()=>{try{localStorage.setItem('yaniv-sound',JSON.stringify(prefs))}catch(e){}};
+  const mtof=m=>440*2**((m-69)/12);
+  function impulse(sec){
+    const len=ctx.sampleRate*sec, b=ctx.createBuffer(2,len,ctx.sampleRate);
+    for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4)}
+    return b;
+  }
+  function init(){
+    if(ctx)return true;
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC)return false;
+    ctx=new AC();
+    master=ctx.createGain(); master.gain.value=.9; master.connect(ctx.destination);
+    sfxBus=ctx.createGain(); sfxBus.gain.value=prefs.sfx?1:0; sfxBus.connect(master);
+    musicBus=ctx.createGain(); musicBus.gain.value=prefs.music?.55:0; musicBus.connect(master);
+    verb=ctx.createConvolver(); verb.buffer=impulse(2.2);
+    const wet=ctx.createGain(); wet.gain.value=.28; verb.connect(wet); wet.connect(master);
+    return true;
+  }
+  function unlock(){
+    if(!init())return;
+    if(ctx.state==='suspended')ctx.resume();
+    if(prefs.music&&!musicTimer&&document.visibilityState==='visible')startMusic();
+  }
+  // one shaped tone
+  function tone(f,{dur=.2,type='sine',vol=.2,at=0,attack=.005,to=null,bus=sfxBus,send=0,lp=null}={}){
+    if(!ctx)return;
+    const t=ctx.currentTime+at, o=ctx.createOscillator(), g=ctx.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t); if(to)o.frequency.exponentialRampToValueAtTime(to,t+dur);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    let node=o;
+    if(lp){const f2=ctx.createBiquadFilter();f2.type='lowpass';f2.frequency.value=lp;o.connect(f2);node=f2}
+    node.connect(g); g.connect(bus);
+    if(send){const s=ctx.createGain();s.gain.value=send;g.connect(s);s.connect(verb)}
+    o.start(t); o.stop(t+dur+.05);
+  }
+  // filtered noise burst: card swish, paper, thump
+  function noise({dur=.12,vol=.15,at=0,freq=2500,q=.8,type='bandpass',sweep=null}={}){
+    if(!ctx)return;
+    const t=ctx.currentTime+at, len=Math.ceil(ctx.sampleRate*dur), b=ctx.createBuffer(1,len,ctx.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+    const src=ctx.createBufferSource(); src.buffer=b;
+    const f=ctx.createBiquadFilter(); f.type=type; f.Q.value=q; f.frequency.setValueAtTime(freq,t); if(sweep)f.frequency.exponentialRampToValueAtTime(sweep,t+dur);
+    const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    src.connect(f); f.connect(g); g.connect(sfxBus); src.start(t); src.stop(t+dur);
+  }
+  const SFX={
+    tap(){noise({dur:.04,vol:.12,freq:3800,q:1.5});tone(1100,{dur:.06,type:'triangle',vol:.05})},
+    untap(){noise({dur:.04,vol:.08,freq:2600,q:1.5});tone(760,{dur:.05,type:'triangle',vol:.04})},
+    click(){tone(1500,{dur:.035,type:'square',vol:.025,lp:3000})},
+    drop(k=1){noise({dur:.16,vol:.22*k,freq:1800,sweep:700,q:.7});tone(150,{dur:.09,vol:.18*k,to:90})},
+    draw(){noise({dur:.14,vol:.14,freq:900,sweep:4200,q:.6,type:'bandpass'})},
+    take(){noise({dur:.1,vol:.12,freq:2400,sweep:1200});tone(660,{dur:.08,type:'triangle',vol:.05,at:.05})},
+    deal(){for(let i=0;i<5;i++)noise({dur:.08,vol:.12,freq:2200+i*150,sweep:900,at:i*.07})},
+    nope(){tone(140,{dur:.12,type:'square',vol:.05,lp:900});tone(120,{dur:.12,type:'square',vol:.05,lp:900,at:.1})},
+    turn(ready){tone(988,{dur:.35,vol:.07,send:.4});tone(ready?1480:1319,{dur:.45,vol:.07,at:.1,send:.4})},
+    bell(){[[1568,.14],[3920,.05],[2349,.06]].forEach(([f,v])=>tone(f,{dur:1.1,vol:v,send:.5}));[[1568,.1],[3920,.04]].forEach(([f,v])=>tone(f,{dur:.9,vol:v,at:.18,send:.5}))},
+    coins(){[0,.07,.14,.22].forEach((a,i)=>{tone(1568*(i%2?1.335:1),{dur:.25,type:'square',vol:.035,at:a,lp:5000,send:.3});tone(3136,{dur:.12,vol:.03,at:a})});noise({dur:.18,vol:.05,freq:6000,q:2,at:.02})},
+    win(){for(let i=0;i<14;i++)tone(1200+Math.random()*1400,{dur:.22,vol:.05,at:i*.045,send:.3});[523,659,784,1047].forEach((f,i)=>tone(f,{dur:.5,type:'triangle',vol:.09,at:.1+i*.09,send:.4}))},
+    lose(){tone(392,{dur:.35,type:'triangle',vol:.09,lp:1500,send:.3});tone(330,{dur:.6,type:'triangle',vol:.09,at:.28,lp:1500,send:.3})},
+    buy(){[880,1109,1319,1760].forEach((f,i)=>tone(f,{dur:.3,vol:.07,at:i*.06,send:.45}));SFX.coins()},
+    yaniv(){
+      [[523,0],[659,.09],[784,.18],[1047,.27]].forEach(([f,a])=>{tone(f,{dur:.18,type:'sawtooth',vol:.06,at:a,lp:2600,send:.3})});
+      [523,659,784,1047].forEach(f=>tone(f,{dur:.9,type:'sawtooth',vol:.045,at:.38,lp:2200,send:.5}));
+      tone(110,{dur:.25,vol:.25,at:.38,to:60});noise({dur:.3,vol:.12,freq:5000,q:.5,type:'highpass',at:.38});
+    },
+    asaf(){
+      [[392,0,.3],[370,.32,.3],[349,.64,.3],[330,.96,.9]].forEach(([f,a,d])=>tone(f,{dur:d,type:'sawtooth',vol:.08,at:a,lp:900,send:.3}));
+      if(!ctx)return; const t=ctx.currentTime+.96,o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=6;g.gain.value=8;o.connect(g);o.start(t);o.stop(t+.9);
+    },
+    fanfare(){SFX.yaniv();setTimeout(SFX.win,700)},
+  };
+  // ---- background music: a slow nylon-guitar arpeggio per city ----
+  const PROG=[
+    [[57,64,69,72],[50,62,65,69],[52,59,64,68],[57,64,69,72]],      // Lisbon: Am Dm E Am, fado-ish
+    [[50,62,66,69],[48,60,64,67],[47,59,62,66],[45,57,61,64]],      // Goa: D C Bm A, beach
+  ];
+  const PATTERN=[0,1,2,3,2,1,2,3];
+  function pluck(m,t,vol){
+    const o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
+    o.type='triangle'; o2.type='sine'; o.frequency.value=mtof(m); o2.frequency.value=mtof(m)*2.003;
+    f.type='lowpass'; f.frequency.setValueAtTime(2600,t); f.frequency.exponentialRampToValueAtTime(700,t+.6);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.008); g.gain.exponentialRampToValueAtTime(.0001,t+1.4);
+    const g2=ctx.createGain(); g2.gain.value=.3; o2.connect(g2); g2.connect(f);
+    o.connect(f); f.connect(g); g.connect(musicBus);
+    const s=ctx.createGain(); s.gain.value=.5; g.connect(s); s.connect(verb);
+    o.start(t); o2.start(t); o.stop(t+1.5); o2.stop(t+1.5);
+  }
+  function startMusic(){
+    if(!ctx||musicTimer)return;
+    nextBeat=ctx.currentTime+.15; step=0;
+    const eighth=60/80/2;
+    musicTimer=setInterval(()=>{
+      const prog=PROG[Math.min(typeof E!=='undefined'&&E?E.country:0,PROG.length-1)];
+      while(nextBeat<ctx.currentTime+.4){
+        const bar=Math.floor(step/8)%prog.length, i=step%8, chord=prog[bar];
+        if(i===0||i===4)pluck(chord[0]-12+(i===4?7:0),nextBeat,.09);
+        pluck(chord[PATTERN[i]],nextBeat,i%2?.035:.05);
+        if(i===6&&bar%2===1)pluck(chord[3]+12,nextBeat+eighth/2,.025);
+        nextBeat+=eighth*(i%2?.92:1.08); step++;
+      }
+    },100);
+  }
+  function stopMusic(){clearInterval(musicTimer);musicTimer=null}
+  function set(k,v){
+    prefs[k]=v; save(); init();
+    if(k==='sfx')sfxBus.gain.setTargetAtTime(v?1:0,ctx.currentTime,.05);
+    if(k==='music'){musicBus.gain.setTargetAtTime(v?.55:0,ctx.currentTime,.2);if(v)unlock();else stopMusic()}
+  }
+  document.addEventListener('pointerdown',unlock,true);
+  document.addEventListener('visibilitychange',()=>{
+    if(!ctx)return;
+    if(document.visibilityState==='hidden'){stopMusic();ctx.suspend()}
+    else{ctx.resume();if(prefs.music)startMusic()}
+  });
+  return {SFX,set,prefs:()=>prefs,unlock};
+})();
+const SFX=new Proxy({}, {get:(_,k)=>(...a)=>{try{AUD.SFX[k]?.(...a)}catch(e){}}});
+function renderMute(){document.querySelectorAll('.mutebtn').forEach(b=>{const p=AUD.prefs(),on=p.sfx||p.music;b.innerHTML=on?SPK_ON:SPK_OFF;b.setAttribute('aria-label',on?'Mute sound':'Turn sound on');b.classList.toggle('off',!on)})}
+
+const SPK_ON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const SPK_OFF='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+function resultSound(){
+  const r=S.result; if(!r)return;
+  if(S.mode==='sprint'){ if(r.place===0)SFX.win(); else if(r.pay+r.bonus>0&&r.place<3)SFX.coins(); else SFX.lose(); }
+  else if(S.mode==='champion'){ r.won?SFX.fanfare():SFX.lose(); }
+  else if(S.mode==='duel'){ r.won?SFX.win():SFX.lose(); }
+  else { const me=r.rows.find(x=>x.human); if(me&&me.add===0)SFX.coins(); else if(me&&me.caller&&r.asaf)SFX.lose(); }
+}
+
 /* ================= power cards ================= */
 const PERKS={
   tram:{name:'Tram 28',price:2000,text:'The first time you draw from the deck, see 2 cards and keep 1.'},
@@ -685,7 +822,7 @@ function startClassic(){
   begin('classic');
 }
 function startRound(){
-  S.deck=shuffle(newDeck()); S.buried=[]; S.used={};
+  S.deck=shuffle(newDeck()); S.buried=[]; S.used={}; SFX.deal();
   for(const p of S.players){p.hand=[];p.said='';if(!p.out){const n=p.human&&has('nata')?S.g.handSize-1:S.g.handSize;for(let k=0;k<n;k++)p.hand.push(S.deck.pop())}}
   S.last=[S.deck.pop()]; S.lastType='single'; S.lastBy=-1;
   S.turn=S.players[S.starter].out?nextActive(S.starter):S.starter;
@@ -709,23 +846,26 @@ function applyMove(pi,ids,take){
     if(p.human&&has('tram')&&!S.used.tram){
       const two=[drawCard(),drawCard()].filter(Boolean);
       S.last=v.cards; S.lastType=v.type; S.lastBy=pi; S.used.tram=true;
-      addLog(`You dropped ${describe(v)} and rode Tram 28.`);
+      addLog(`You dropped ${describe(v)} and rode Tram 28.`);SFX.drop();setTimeout(SFX.bell,150);
       S.sel=new Set(); S.choice=two; render(); return;
     }
     got=drawCard();
   }
   if(got)p.hand.push(got);
   S.last=v.cards; S.lastType=v.type; S.lastBy=pi;
+  if(p.human){SFX.drop();setTimeout(take>=0?SFX.take:SFX.draw,140)}else{SFX.drop(.5);if(take>=0)setTimeout(SFX.take,120)}
   const src=take>=0?`took ${label(got)} from the pile`:(p.human&&got?`drew ${label(got)}`:'drew from the deck');
   addLog(`${p.name} dropped ${describe(v)}, ${src}.`);
   if(p.human){S.sel=new Set();S.fresh=got?got.id:null}
   else{S.fresh=null;if(take>=0&&val(got)<=3&&Math.random()<.5)say(p,'take')}
-  S.turn=nextActive(pi); render(); maybeBot();
+  S.turn=nextActive(pi);
+  if(S.turn===0&&S.players[0].hand.length)setTimeout(()=>{if(myTurn())SFX.turn(total(S.players[0].hand)<=myYanivAt())},350);
+  render(); maybeBot();
 }
 function chooseTram(i){
   const keep=S.choice[i], other=S.choice[1-i];
   S.players[0].hand.push(keep); if(other)S.buried.push(other);
-  S.fresh=keep.id; S.choice=null; addLog(`You kept ${label(keep)}.`);
+  S.fresh=keep.id; S.choice=null; addLog(`You kept ${label(keep)}.`); SFX.draw();
   S.turn=nextActive(0); render(); maybeBot();
 }
 function callYaniv(pi){
@@ -775,10 +915,10 @@ function callYaniv(pi){
     S.phase=(S.players[0].out||active().length<=1)?'gameOver':'roundEnd';
   }
   S.stamping=true; render();
-  showStamp('Yaniv!',false);
+  showStamp('Yaniv!',false); SFX.yaniv();
   setTimeout(()=>{
-    if(asaf)showStamp('Asaf!',true);
-    setTimeout(()=>{$('stamp').hidden=true;S.stamping=false;render()},asaf?1000:500);
+    if(asaf){showStamp('Asaf!',true);SFX.asaf()}
+    setTimeout(()=>{$('stamp').hidden=true;S.stamping=false;render();resultSound()},asaf?1200:600);
   },900);
 }
 function showStamp(text,asaf){const st=$('stamp');st.hidden=false;st.classList.toggle('asaf',asaf);const t=$('stamp-t');t.textContent=text;t.style.animation='none';void t.offsetWidth;t.style.animation=''}
@@ -813,12 +953,13 @@ function say(p,kind){
 /* ================= deck & market ================= */
 function buyPerk(k){
   const pk=PERKS[k]; if(E.owned.includes(k))return;
-  if(E.coins<pk.price){toast(`You need ${fmt(pk.price-E.coins)} more coins.`);return}
+  if(E.coins<pk.price){SFX.nope();toast(`You need ${fmt(pk.price-E.coins)} more coins.`);return}
   E.coins-=pk.price; E.owned.push(k);
   if(E.equipped.length<SLOTS)E.equipped.push(k);
-  saveEcon(); bump('r-coin'); toast(`${pk.name} is yours${E.equipped.includes(k)?' and in your deck':''}.`); render();
+  saveEcon(); bump('r-coin'); SFX.buy(); toast(`${pk.name} is yours${E.equipped.includes(k)?' and in your deck':''}.`); render();
 }
 function toggleEquip(k){
+  SFX.click();
   if(E.equipped.includes(k))E.equipped=E.equipped.filter(x=>x!==k);
   else{if(E.equipped.length>=SLOTS){toast(`Your deck holds ${SLOTS} cards. Remove one first.`);return}E.equipped.push(k)}
   saveEcon(); render();
@@ -1043,11 +1184,16 @@ function openSettings(){
   resetArmed=false;
   $('info-sheet').innerHTML=`<h2>Settings</h2>
     <div class="form">
+      <div class="field"><label for="s-sfx">Sound effects<small>Cards, coins, Yaniv and Asaf</small></label><input type="checkbox" id="s-sfx"></div>
+      <div class="field"><label for="s-music">Music<small>A slow guitar from each city</small></label><input type="checkbox" id="s-music"></div>
       <div class="field"><label>How to play<small>The rules in six lines</small></label><button class="btn" type="button" data-act="rules">Open</button></div>
       <div class="field"><label>Reset progress<small>Prototype only: coins, tickets and cards</small></label><button class="btn" type="button" data-act="reset">Reset</button></div>
     </div>
     <div class="foot"><button class="btn primary" type="button" data-act="close">Done</button></div>`;
   $('ov-info').hidden=false;
+  const p=AUD.prefs(); $('s-sfx').checked=p.sfx; $('s-music').checked=p.music;
+  $('s-sfx').onchange=e=>{AUD.set('sfx',e.target.checked);renderMute();SFX.click()};
+  $('s-music').onchange=e=>{AUD.set('music',e.target.checked);renderMute()};
 }
 
 /* ================= render ================= */
@@ -1056,22 +1202,22 @@ function render(){
   $('phone').classList.toggle('playing',playing);
   for(const k of ['play','deck','friends','table'])$('scr-'+k).hidden=k!==scr;
   for(const k of ['play','deck','friends'])$('nav-'+k).setAttribute('aria-current',k===scr?'page':'false');
-  renderEcon();
+  renderEcon(); renderMute();
   if(scr==='play')renderPlay();
   else if(scr==='deck')renderDeck();
   else if(scr==='friends')renderFriends();
   else renderTable();
   if(!playing)$('ov-round').hidden=true;
 }
-function goTab(t){clearTimeout(timer);S.screen=t;S.phase='idle';S.choice=null;$('ov-round').hidden=true;render();$('scr-'+t).scrollTop=0}
+function goTab(t){SFX.click();clearTimeout(timer);S.screen=t;S.phase='idle';S.choice=null;$('ov-round').hidden=true;render();$('scr-'+t).scrollTop=0}
 
 /* ================= input ================= */
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]'); if(!el)return;
   const act=el.dataset.act;
   if(act==='close-bg'){if(e.target===el)el.hidden=true;return}
-  if(act==='card'){if(S.phase!=='play')return;const id=el.dataset.id;S.sel.has(id)?S.sel.delete(id):S.sel.add(id);S.fresh=null;render()}
-  else if(act==='deck'){const {v}=selection();if(myTurn()&&v)applyMove(0,[...S.sel],-1)}
+  if(act==='card'){if(S.phase!=='play')return;const id=el.dataset.id;if(S.sel.has(id)){S.sel.delete(id);SFX.untap()}else{S.sel.add(id);SFX.tap()}S.fresh=null;render()}
+  else if(act==='deck'){const {v}=selection();if(myTurn()&&v)applyMove(0,[...S.sel],-1);else if(myTurn())SFX.nope()}
   else if(act==='pile'){const {v}=selection();const i=+el.dataset.i;if(myTurn()&&v&&pickable().includes(i))applyMove(0,[...S.sel],i)}
   else if(act==='choose'){if(S.choice)chooseTram(+el.dataset.i)}
   else if(act==='yaniv'){if(myTurn()&&total(S.players[0].hand)<=myYanivAt()){S.sel=new Set();callYaniv(0)}}
@@ -1084,16 +1230,17 @@ document.addEventListener('click',e=>{
   else if(act==='classic'){$('ov-round').hidden=true;startClassic()}
   else if(act==='leave'){goTab(S.mode==='classic'||S.mode==='duel'?'friends':(S.mode==='champion'?'deck':'play'))}
   else if(act==='tab'){goTab(el.dataset.tab)}
-  else if(act==='mult'){E.mult=+el.dataset.m;saveEcon();render()}
-  else if(act==='stake'){E.stake=+el.dataset.v;saveEcon();render()}
-  else if(act==='rival'){E.rival=+el.dataset.i;saveEcon();render()}
+  else if(act==='mult'){SFX.click();E.mult=+el.dataset.m;saveEcon();render()}
+  else if(act==='stake'){SFX.click();E.stake=+el.dataset.v;saveEcon();render()}
+  else if(act==='rival'){SFX.click();E.rival=+el.dataset.i;saveEcon();render()}
   else if(act==='buy'){buyPerk(el.dataset.k)}
   else if(act==='equip'){toggleEquip(el.dataset.k)}
-  else if(act==='daily'){if(E.dailyDay!==today()){E.dailyDay=today();E.tickets+=5;bump('r-tix');addCoins(C().reward/2);toast(`+5 tickets and +${fmt(C().reward/2)} coins`);render()}}
-  else if(act==='ad'){if(E.adsDay!==today()){E.adsDay=today();E.ads=0}if(E.ads<ADS_PER_DAY){E.ads++;E.tickets+=2;saveEcon();bump('r-tix');toast('+2 tickets (simulated ad)');render()}}
+  else if(act==='daily'){if(E.dailyDay!==today()){E.dailyDay=today();E.tickets+=5;bump('r-tix');addCoins(C().reward/2);SFX.coins();toast(`+5 tickets and +${fmt(C().reward/2)} coins`);render()}}
+  else if(act==='ad'){if(E.adsDay!==today()){E.adsDay=today();E.ads=0}if(E.ads<ADS_PER_DAY){E.ads++;E.tickets+=2;saveEcon();bump('r-tix');SFX.coins();toast('+2 tickets (simulated ad)');render()}}
   else if(act==='reset'){if(!resetArmed){resetArmed=true;el.textContent='Tap again';return}E=freshEcon();saveEcon();$('ov-info').hidden=true;goTab('play');toast('Progress reset.')}
   else if(act==='rules'){openRules()}
   else if(act==='settings'){openSettings()}
+  else if(act==='mute'){const p=AUD.prefs(),on=p.sfx||p.music;AUD.set('sfx',!on);AUD.set('music',!on);renderMute();if(!on)SFX.click()}
   else if(act==='close'){el.closest('.ov').hidden=true}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('ov-info').hidden=true});
