@@ -1,0 +1,1275 @@
+<title>Yaniv Hostel</title>
+<meta name="theme-color" content="#0a2226">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a phone app. One screen at a time inside a phone-sized frame (full screen on a phone, a framed device on desktop): Play, City and Friends tabs on a bottom bar; the card table takes over the whole screen while you play. Deliberately single dark theme: a night table in a hostel common room. */
+:root{
+  --room:#06171a;          /* desktop backdrop */
+  --rail:#0a2226;          /* app chrome */
+  --table:#0f3036;
+  --table-2:#17464f;
+  --panel:#123a41;
+  --ink:#f3ecdc;
+  --muted:#93b3b1;
+  --card:#fbf6ea;
+  --card-edge:#d6cbb1;
+  --red:#c8323c;
+  --black:#1c2427;
+  --joker:#6b4bb5;
+  --accent:#f2b33d;
+  --accent-ink:#2a1d04;
+  --coin:#f7c94f;
+  --good:#74d6a0;
+  --bad:#ff7d6c;
+  --display:"Bowlby One SC","Arial Black",Impact,sans-serif;
+  --body:"Outfit",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--room);color:var(--ink);font-family:var(--body);font-size:14px;-webkit-tap-highlight-color:transparent;display:grid;place-items:center}
+button{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.phone{position:relative;width:100%;height:100%;background:var(--rail);overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr);container-type:inline-size}
+@media (min-width:520px){
+  body{padding:16px;box-sizing:border-box;background:radial-gradient(ellipse at 50% 30%,#0e2c31,var(--room) 70%)}
+  .phone{width:400px;height:min(100%,860px);border-radius:36px;box-shadow:0 0 0 10px #02090a,0 0 0 11px #1e3a3f,0 30px 80px rgba(0,0,0,.6)}
+}
+.phone.playing{grid-template-rows:minmax(0,1fr)}
+.phone.playing .appbar,.phone.playing .nav{display:none}
+
+/* app bar */
+.appbar{display:flex;align-items:center;gap:8px;padding:12px 16px 8px}
+.brand{font-family:var(--display);font-size:20px;line-height:1;color:var(--accent);margin-right:auto}
+.rchip{display:flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;background:var(--panel);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:13px}
+.rchip small{font-weight:500;color:var(--muted);font-size:11px}
+.rchip.bump{animation:bump .5s ease}
+@keyframes bump{40%{transform:scale(1.15)}}
+.ic-ticket{width:18px;height:12px;flex:none;background:radial-gradient(circle at 0 50%,transparent 3px,var(--accent) 3.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% 50%,transparent 3px,var(--accent) 3.5px) right/51% 100% no-repeat}
+.ic-coin{width:14px;height:14px;flex:none;border-radius:50%;background:var(--coin);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--coin) 60%,#7a5300)}
+.iconbtn.off{color:var(--muted)}
+.iconbtn{width:34px;height:34px;border-radius:50%;border:0;background:var(--panel);cursor:pointer;display:grid;place-items:center;font-size:16px}
+
+/* bottom nav */
+.nav{display:grid;grid-template-columns:repeat(3,1fr);padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px));background:var(--rail);border-top:1px solid color-mix(in srgb,var(--ink) 8%,transparent)}
+.nav button{border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--muted);font-size:11.5px;font-weight:600;border-radius:12px}
+.nav button svg{width:24px;height:24px}
+.nav button[aria-current="page"]{color:var(--accent)}
+.nav button{position:relative}
+.nav .dot{position:absolute;top:4px;left:calc(50% + 8px);width:8px;height:8px;border-radius:50%;background:var(--bad)}
+
+.screen{min-height:0;overflow:auto;position:relative}
+.pad{padding:4px 16px 20px;display:flex;flex-direction:column;gap:14px}
+
+/* buttons */
+.btn{font-weight:600;font-size:13px;border-radius:999px;padding:8px 14px;border:1px solid color-mix(in srgb,var(--ink) 28%,transparent);background:transparent;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.wide{width:100%;border-radius:12px;padding:11px 14px}
+.cta{width:100%;font-family:var(--display);font-size:24px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:16px;padding:14px 12px 12px;cursor:pointer;box-shadow:0 5px 0 color-mix(in srgb,var(--accent) 50%,#000);display:flex;flex-direction:column;align-items:center;gap:2px}
+.cta small{font-family:var(--body);font-size:13px;font-weight:600;opacity:.8}
+.cta:active{transform:translateY(3px);box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 50%,#000)}
+.cta:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+
+/* play screen */
+.hero{position:relative;border-radius:20px;overflow:hidden;height:200px;cursor:pointer;border:0;padding:0;background:var(--table);display:block;width:100%}
+.hero svg{position:absolute;inset:0;width:100%;height:100%}
+.hero .cap{position:absolute;left:0;right:0;bottom:0;padding:28px 14px 12px;background:linear-gradient(transparent,rgba(6,23,26,.85));text-align:left;display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.hero .cap b{display:block;font-family:var(--display);font-size:28px;line-height:1}
+.hero .cap small{display:block;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.hero .cap span.go{font-size:12.5px;font-weight:700;background:var(--card);color:var(--black);border-radius:999px;padding:5px 10px;white-space:nowrap}
+.minibar{height:6px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;margin-top:8px;width:150px}
+.minibar i{display:block;height:100%;background:var(--accent)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;list-style:none;margin:0;padding:0}
+.steps li{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;font-size:12px;font-weight:600;padding:10px 4px;border-radius:12px;background:var(--panel)}
+.steps li i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:12px}
+.bet{display:flex;align-items:center;gap:10px}
+.bet label{font-weight:600;font-size:13px;white-space:nowrap}
+.seg{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--panel);border-radius:12px;padding:4px}
+.seg button{border:0;border-radius:9px;background:none;padding:7px 0;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"] .ic-ticket{background:radial-gradient(circle at 0 50%,transparent 3px,var(--accent-ink) 3.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% 50%,transparent 3px,var(--accent-ink) 3.5px) right/51% 100% no-repeat}
+.note{font-size:12.5px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.note b{color:var(--ink)}
+.free{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.free button{border-radius:12px;border:1px dashed color-mix(in srgb,var(--ink) 28%,transparent);background:none;padding:10px 8px;cursor:pointer;font-weight:600;font-size:12.5px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.free button small{color:var(--muted);font-weight:500;font-size:11px}
+.free button:disabled{opacity:.4;cursor:not-allowed}
+
+/* city screen */
+.cityscr{display:grid;grid-template-rows:auto minmax(0,1fr);height:100%;overflow:hidden}
+.cityhead{padding:4px 16px 10px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.cityhead small{display:block;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.cityhead h1{margin:2px 0 0;font-family:var(--display);font-size:30px;line-height:1}
+.cityhead .prog{text-align:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--muted)}
+.cityhead .bar{width:120px;height:7px;border-radius:4px;background:color-mix(in srgb,var(--ink) 14%,transparent);overflow:hidden;margin-top:5px}
+.cityhead .bar i{display:block;height:100%;background:var(--accent);transition:width .4s}
+.scene{position:relative;min-height:0}
+.scene svg{width:100%;height:100%;display:block}
+.scene .hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(6,23,26,.78);color:var(--ink);font-size:12.5px;font-weight:600;border-radius:999px;padding:6px 12px;white-space:nowrap;pointer-events:none}
+.lm{cursor:pointer}
+.lm .bodyg{transform-box:fill-box;transform-origin:50% 100%}
+.lm.pop .bodyg{animation:grow .6s cubic-bezier(.2,1.6,.4,1)}
+@keyframes grow{0%{transform:scale(.6,.2)}100%{transform:none}}
+.lm .up{animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-5px)}}
+.lm:focus-visible{outline:none}
+.lm:focus-visible .pillbg{stroke:var(--accent);stroke-width:2}
+
+/* bottom sheet */
+.bs{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(4,14,16,.55)}
+.bs .sheetb{background:var(--table);border-radius:22px 22px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));animation:slide .25s ease}
+@keyframes slide{from{transform:translateY(40px);opacity:0}}
+.grab{width:40px;height:4px;border-radius:2px;background:color-mix(in srgb,var(--ink) 25%,transparent);margin:0 auto 10px}
+.lmhead{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.lmhead .pic{width:110px;height:110px;flex:none;border-radius:16px;background:linear-gradient(#cfe6ef,#f6e7c8)}
+.lmhead h2{margin:0;font-family:var(--display);font-size:22px;line-height:1.05}
+.lmhead p{margin:4px 0 0;color:var(--muted);font-size:13px;line-height:1.4}
+.lvl{display:flex;gap:5px;margin-top:8px}
+.lvl i{width:22px;height:6px;border-radius:3px;background:color-mix(in srgb,var(--ink) 18%,transparent)}
+.lvl i.on{background:var(--accent)}
+.buildbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:16px;border-radius:14px;padding:13px;border:0;cursor:pointer;background:var(--accent);color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.buildbtn:disabled{background:color-mix(in srgb,var(--ink) 12%,transparent);color:var(--muted);cursor:not-allowed}
+.short{margin:8px 0 0;text-align:center;font-size:12.5px;color:var(--muted)}
+
+/* friends screen */
+.card-panel{border-radius:18px;padding:16px;background:var(--panel)}
+.card-panel h2{margin:0 0 6px;font-family:var(--display);font-size:22px;color:var(--accent)}
+.card-panel p{margin:0 0 12px;color:var(--muted);line-height:1.45}
+.soon{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 8px;background:color-mix(in srgb,var(--ink) 12%,transparent);color:var(--muted);margin-left:6px;vertical-align:3px}
+
+/* table */
+.tablescr{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr)}
+.tbar .iconbtn{flex:none}
+.tbar .ttl small{overflow:hidden;text-overflow:ellipsis}
+.tbar{display:flex;align-items:center;gap:8px;padding:12px 12px 6px}
+.tbar .ttl{flex:1;min-width:0;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbar .ttl small{display:block;font-weight:500;color:var(--muted);font-size:11.5px}
+.table{position:relative;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:6px;margin:0 6px 6px;padding:12px 10px calc(12px + env(safe-area-inset-bottom,0px));border-radius:22px;background:radial-gradient(ellipse at 50% 42%,var(--table-2),var(--table) 72%);overflow:hidden}
+.table::before{content:"";position:absolute;inset:6px;border:1.5px dashed color-mix(in srgb,var(--ink) 13%,transparent);border-radius:16px;pointer-events:none}
+.opps{display:flex;gap:6px;justify-content:center;position:relative;z-index:2}
+.opp{position:relative;flex:1 1 0;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:3px 6px;padding:6px 8px;border-radius:12px;background:color-mix(in srgb,var(--rail) 55%,transparent);border:1.5px solid transparent;transition:border-color .2s,box-shadow .2s}
+.opp.active{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.opp.out{opacity:.38}
+.av{width:26px;height:26px;border-radius:50%;background:var(--av);color:var(--rail);display:grid;place-items:center;font-weight:700;font-size:12px}
+.who b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thinking{font-size:10.5px;color:var(--accent);height:13px}
+.meta{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
+.pts{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.backs{display:flex;padding-left:4px}
+.bk{width:10px;height:14px;border-radius:2px;margin-left:-4px;background:var(--accent);border:1px solid var(--rail)}
+.bubble{position:absolute;left:4px;right:4px;top:calc(100% + 8px);background:var(--card);color:var(--black);font-size:12px;font-weight:500;line-height:1.3;padding:6px 8px;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.35);animation:pop .25s ease both;z-index:3}
+.bubble::before{content:"";position:absolute;top:-6px;left:16px;border:6px solid transparent;border-top:0;border-bottom-color:var(--card)}
+@keyframes pop{from{transform:translateY(-4px);opacity:0}}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:0;position:relative;z-index:1}
+.piles{display:flex;gap:36px;align-items:flex-start}
+.slot{display:flex;flex-direction:column;align-items:center;gap:8px}
+.lbl{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:center}
+.lbl b{color:var(--ink);font-weight:600}
+.deck{--cw:62px;position:relative;background:none;border:0;padding:0;cursor:default}
+.deck .count{position:absolute;right:-8px;bottom:-8px;background:var(--rail);color:var(--ink);font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px;font-variant-numeric:tabular-nums}
+.deck.go{cursor:pointer}
+.deck.go .card{box-shadow:0 0 0 3px var(--accent),0 0 22px color-mix(in srgb,var(--accent) 50%,transparent)}
+.pile{--cw:62px;display:flex}
+.pile .card+.card{margin-left:calc(var(--cw) * -0.42)}
+.log{list-style:none;margin:0;padding:0 8px;font-size:12px;line-height:1.5;color:var(--muted);text-align:center;min-height:3em}
+.log li:first-child{color:var(--ink)}
+.card{--w:var(--cw,72px);width:var(--w);aspect-ratio:5/7;flex:none;position:relative;display:block;padding:0;border-radius:calc(var(--w) * .1);background:var(--card);color:var(--black);border:1px solid var(--card-edge);box-shadow:0 2px 0 var(--card-edge),0 6px 14px rgba(0,0,0,.28);user-select:none;transition:transform .15s ease,box-shadow .15s ease}
+.card.red{color:var(--red)}
+.card.joker{color:var(--joker)}
+.card .idx{position:absolute;top:5%;left:8%;display:flex;flex-direction:column;align-items:center;font-weight:700;font-size:calc(var(--w) * .25);line-height:.95}
+.card .idx i{font-style:normal;font-size:.78em}
+.card .idx.br{top:auto;left:auto;bottom:5%;right:8%;transform:rotate(180deg)}
+.card .pip{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--w) * .46)}
+.card .jk{position:absolute;left:0;right:0;bottom:9%;text-align:center;font-family:var(--display);font-size:calc(var(--w) * .13)}
+.card.back{border:3px solid var(--card);background:repeating-linear-gradient(45deg,var(--accent) 0 6px,color-mix(in srgb,var(--accent) 78%,var(--rail)) 6px 12px)}
+.card.back::after{content:"Y";position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:calc(var(--w) * .42);color:var(--accent-ink)}
+button.card{cursor:pointer}
+button.card:disabled{cursor:default}
+.pile .card.pick{box-shadow:0 0 0 3px var(--accent),0 0 22px color-mix(in srgb,var(--accent) 50%,transparent);z-index:1}
+.pile .card.hint{outline:2px dashed color-mix(in srgb,var(--accent) 70%,transparent);outline-offset:3px}
+.pile .card.dim{filter:brightness(.72)}
+.me{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:2}
+.me-bar{width:100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 8px}
+.chip{font-size:12px;font-weight:600;border-radius:999px;padding:5px 10px;background:color-mix(in srgb,var(--rail) 65%,transparent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip.ok{color:var(--good)}
+.status{flex:1 1 100%;order:-1;min-width:0;text-align:center;font-size:13.5px;line-height:1.4;min-height:2.8em;text-wrap:balance}
+.status b{color:var(--accent);font-weight:600}
+.status .warn{color:var(--bad)}
+.sortbtn{font-size:12px;padding:5px 10px}
+.yaniv{font-family:var(--display);font-size:18px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:8px 16px;cursor:pointer;box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 50%,#000)}
+.yaniv:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+.yaniv.ready{animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 50%,#000),0 0 0 8px color-mix(in srgb,var(--accent) 22%,transparent)}}
+.hand{display:flex;justify-content:center;gap:5px;padding-top:18px;--cw:min(66px,calc((100cqw - 48px) / var(--n) - 5px))}
+.hand .card.sel{transform:translateY(-16px);box-shadow:0 0 0 3px var(--accent),0 10px 18px rgba(0,0,0,.35)}
+.hand .card.fresh{animation:fresh .7s ease}
+@keyframes fresh{0%{transform:translateY(-30px) rotate(-6deg);opacity:0}100%{transform:none;opacity:1}}
+
+/* overlays inside the phone */
+.ov{position:absolute;inset:0;z-index:30;display:grid;place-items:center;padding:16px;background:rgba(4,14,16,.78)}
+.sheet{width:100%;max-height:calc(100% - 16px);overflow:auto;background:var(--table);border:1px solid color-mix(in srgb,var(--ink) 16%,transparent);border-radius:20px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);box-sizing:border-box}
+.sheet h2{margin:0 0 6px;font-family:var(--display);font-size:28px;line-height:1.05;color:var(--accent);text-wrap:balance}
+.sheet h2.asaf{color:var(--bad)}
+.sheet h3{margin:16px 0 8px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sheet p{margin:0 0 12px;line-height:1.5}
+.sheet .foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+.prize{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:12px 14px;border-radius:14px;margin-bottom:12px;background:color-mix(in srgb,var(--coin) 12%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--coin) 45%,transparent)}
+.prize .place{font-family:var(--display);font-size:20px}
+.prize .amt{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:700;color:var(--coin);font-variant-numeric:tabular-nums}
+.prize .amt .ic-coin{width:18px;height:18px}
+.prize small{display:block;width:100%;color:var(--muted);font-size:12px}
+.rtable{display:grid;gap:6px}
+.rrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:4px 10px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--rail) 55%,transparent);font-variant-numeric:tabular-nums}
+.rrow.me{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 60%,transparent)}
+.rrow .nm{font-weight:600;font-size:13.5px}
+.rrow .nm small{display:block;font-weight:500;font-size:11px;color:var(--muted)}
+.rrow .mini{grid-column:1/-1;display:flex;gap:3px;--cw:26px;flex-wrap:wrap}
+.rrow .add{font-weight:700}
+.rrow .add.zero{color:var(--good)}
+.rrow .add.hit{color:var(--bad)}
+.rrow .sc{font-weight:700;font-size:15px;text-align:right}
+.rank{font-family:var(--display);color:var(--muted);margin-right:4px}
+.pill{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 6px;margin-left:5px;vertical-align:1px}
+.pill.lucky{background:color-mix(in srgb,var(--good) 22%,transparent);color:var(--good)}
+.pill.out{background:color-mix(in srgb,var(--bad) 22%,transparent);color:var(--bad)}
+.pill.call{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
+.howto{margin:0;padding-left:20px;line-height:1.5}
+.howto li{margin-bottom:6px}
+.howto b{color:var(--accent);font-weight:600}
+.form{display:grid;gap:8px}
+.field{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:color-mix(in srgb,var(--rail) 55%,transparent)}
+.field label{font-weight:600;font-size:13.5px}
+.field label small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+.field select{font:inherit;background:var(--rail);color:var(--ink);border:1px solid color-mix(in srgb,var(--ink) 25%,transparent);border-radius:8px;padding:5px 6px}
+.field input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+.big-stamp{display:inline-block;font-family:var(--display);font-size:26px;color:var(--good);border:4px solid var(--good);border-radius:12px;padding:6px 14px;transform:rotate(-6deg);margin:6px 0 14px}
+.stamp{position:absolute;inset:0;z-index:40;display:grid;place-items:center;pointer-events:none}
+.stamp span{font-family:var(--display);font-size:72px;line-height:1;color:var(--accent);border:7px solid var(--accent);border-radius:18px;padding:.08em .3em;background:color-mix(in srgb,var(--rail) 78%,transparent);transform:rotate(-8deg);animation:stamp .45s cubic-bezier(.2,1.5,.4,1) both}
+.stamp.asaf span{color:var(--bad);border-color:var(--bad)}
+@keyframes stamp{from{transform:rotate(-8deg) scale(2.2);opacity:0}}
+.toast{position:absolute;left:16px;right:16px;bottom:84px;z-index:45;background:var(--card);color:var(--black);font-weight:600;padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);text-align:center}
+
+/* power cards, market, champion, duel */
+.hero{cursor:default}
+.hero.small{height:130px}
+.mydeck{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center}
+.lbl2{width:100%;text-align:center;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px 3px 4px;background:var(--panel)}
+.pchip svg{width:22px;height:22px}
+.pchip.empty{padding:5px 12px;color:var(--muted);font-weight:500;border:1px dashed color-mix(in srgb,var(--ink) 25%,transparent);background:none}
+.sec{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.hint2{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.4}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot-c{aspect-ratio:3/4;border-radius:14px;border:1.5px dashed color-mix(in srgb,var(--ink) 25%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);background:none;padding:6px;text-align:center}
+.slot-c span{font-size:24px;line-height:1}
+.slot-c small{font-size:10.5px}
+.slot-c.on{border:0;background:linear-gradient(160deg,#1d5560,#123a41);color:var(--ink);cursor:pointer;box-shadow:inset 0 0 0 1.5px var(--accent)}
+.slot-c.on svg{width:52px;height:52px}
+.slot-c.on b{font-size:12px;line-height:1.15}
+.slot-c.on small{color:var(--muted)}
+.market{display:grid;gap:8px}
+.perk{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border-radius:14px;background:var(--panel)}
+.perk-art{width:52px;height:52px;border-radius:12px;background:linear-gradient(160deg,#1d5560,#0f3036);display:grid;place-items:center}
+.perk-art svg{width:44px;height:44px}
+.perk-txt b{font-size:14px}
+.perk-txt p{margin:2px 0 0;font-size:12px;color:var(--muted);line-height:1.35}
+.pbtn{border:0;border-radius:10px;padding:8px 10px;font-weight:700;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;background:color-mix(in srgb,var(--ink) 12%,transparent);font-variant-numeric:tabular-nums}
+.pbtn.buy{background:var(--accent);color:var(--accent-ink)}
+.pbtn.buy .ic-coin{width:12px;height:12px}
+.pbtn.eq{background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good)}
+.pbtn:disabled{background:color-mix(in srgb,var(--ink) 10%,transparent);color:var(--muted);cursor:not-allowed}
+.champ{border-radius:18px;padding:16px;background:linear-gradient(160deg,color-mix(in srgb,var(--av) 22%,var(--panel)),var(--panel))}
+.champ-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.champ-top small{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.champ-top b{font-family:var(--display);font-size:22px}
+.av.big{width:46px;height:46px;font-size:20px}
+.champ p{margin:0 0 12px;color:var(--muted);line-height:1.45}
+.stamps{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.stamp-s{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 9px;border-radius:8px;border:1.5px dashed color-mix(in srgb,var(--ink) 25%,transparent);color:var(--muted)}
+.stamp-s.got{border-style:solid;border-color:var(--good);color:var(--good);transform:rotate(-3deg)}
+.stamp-s.here{border-style:solid;border-color:var(--accent);color:var(--accent)}
+.rivals{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.rival{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:12px;border:1.5px solid transparent;background:color-mix(in srgb,var(--rail) 55%,transparent);cursor:pointer;font-weight:600;font-size:12.5px}
+.rival.on{border-color:var(--accent)}
+.seg button:disabled{opacity:.35;cursor:not-allowed}
+.seg button .ic-coin{width:12px;height:12px}
+details.hr{margin-top:10px}
+details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px 0}
+.prize.lost{background:color-mix(in srgb,var(--bad) 10%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--bad) 40%,transparent)}
+.deck .peek{position:absolute;left:50%;top:-10px;transform:translateX(-50%);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 7px}
+.choice{position:absolute;inset:0;z-index:5;display:grid;place-items:center;background:rgba(4,14,16,.6);border-radius:22px}
+.choice-box{background:var(--table);border-radius:18px;padding:14px 18px;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.choice-cards{display:flex;gap:14px;--cw:76px}
+.choice-cards .card:hover{transform:translateY(-6px)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div class="phone" id="phone">
+  <header class="appbar">
+    <div class="brand">Yaniv</div>
+    <div class="rchip" id="r-tix" title="Travel tickets"><span class="ic-ticket"></span><span id="r-tix-n"></span><small id="r-tix-t"></small></div>
+    <div class="rchip" id="r-coin" title="Coins"><span class="ic-coin"></span><span id="r-coin-n"></span></div>
+    <button class="iconbtn mutebtn" type="button" data-act="mute" aria-label="Mute sound"></button>
+    <button class="iconbtn" type="button" data-act="settings" aria-label="Settings">⚙︎</button>
+  </header>
+
+  <main class="screen" id="scr-play"></main>
+  <main class="screen" id="scr-deck" hidden></main>
+  <main class="screen" id="scr-friends" hidden></main>
+  <main class="screen" id="scr-table" hidden>
+    <div class="tablescr">
+      <div class="tbar">
+        <button class="iconbtn" type="button" data-act="leave" aria-label="Leave the table">✕</button>
+        <div class="ttl" id="tbar-ttl"></div>
+        <button class="iconbtn mutebtn" type="button" data-act="mute" aria-label="Mute sound"></button>
+        <button class="iconbtn" type="button" data-act="rules" aria-label="How to play">?</button>
+      </div>
+      <div class="table">
+        <section class="opps" id="opps" aria-label="Opponents"></section>
+        <section class="center">
+          <div class="piles">
+            <div class="slot">
+              <button class="deck" id="deck" type="button" data-act="deck" aria-label="Draw from the deck"></button>
+              <div class="lbl">Deck</div>
+            </div>
+            <div class="slot">
+              <div class="pile" id="pile"></div>
+              <div class="lbl" id="pile-lbl"></div>
+            </div>
+          </div>
+          <ul class="log" id="log" aria-live="polite"></ul>
+        </section>
+        <div class="choice" id="choice" hidden></div>
+        <section class="me">
+          <div class="me-bar">
+            <div class="status" id="status"></div>
+            <span class="chip" id="total"></span>
+            <button class="btn sortbtn" type="button" data-act="sort" id="sortbtn"></button>
+            <button class="yaniv" type="button" data-act="yaniv" id="yaniv">Yaniv!</button>
+          </div>
+          <div class="hand" id="hand" aria-label="Your hand"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <nav class="nav" aria-label="Main">
+    <button type="button" data-act="tab" data-tab="play" id="nav-play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="3" width="11" height="16" rx="2"/><path d="M15 6l4.5 1.4a1.5 1.5 0 0 1 1 1.9L17 20.5a1.5 1.5 0 0 1-1.9 1L10 20"/></svg>Play</button>
+    <button type="button" data-act="tab" data-tab="deck" id="nav-deck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="6" width="9" height="13" rx="1.5" transform="rotate(-12 7 12.5)"/><rect x="12.5" y="6" width="9" height="13" rx="1.5" transform="rotate(12 17 12.5)"/><rect x="7.5" y="4" width="9" height="14" rx="1.5"/><path d="M12 8.5l1 2 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2L9 10.8l2-.3z"/></svg>Deck<span class="dot" id="deck-dot" hidden></span></button>
+    <button type="button" data-act="tab" data-tab="friends" id="nav-friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14c2.8 0 5 2.2 5 5"/></svg>Friends</button>
+  </nav>
+
+  <div class="ov" id="ov-round" hidden><div class="sheet" id="round-sheet" role="dialog" aria-modal="true"></div></div>
+  <div class="ov" id="ov-info" hidden data-act="close-bg"><div class="sheet" id="info-sheet" role="dialog" aria-modal="true"></div></div>
+  <div class="stamp" id="stamp" hidden><span id="stamp-t">Yaniv!</span></div>
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script>
+const SUITS={S:'♠',H:'♥',D:'♦',C:'♣'};
+const SUIT_ORDER={S:0,H:1,C:2,D:3,J:4};
+const RED=new Set(['H','D']);
+const DEFAULT_RULES={yanivAt:7,asafPenalty:30,endScore:100,lucky:true,bots:3,handSize:5};
+const ME_COLOR='#f2b33d';
+const TICKET_CAP=5, REGEN_MS=25*60*1000, ADS_PER_DAY=5, PLACE_PCT=[1,.4,.15,.05];
+const COUNTRIES=[
+  {city:'Lisbon',country:'Portugal',reward:2000,yanivAt:7,bonus:5000,ruleText:'Classic rules',
+   sites:['Tram 28','Corner café','Rooftop hostel','Fado bar','Lighthouse'],
+   blurbs:['The yellow tram that climbs the hills.','Pastéis de nata and strong coffee.','Where the travelers sleep and the cards come out.','Sad songs, good wine, late nights.','Lights the way home across the Tagus.'],
+   costs:[1000,2000,3000]},
+  {city:'Goa',country:'India',reward:5000,yanivAt:5,bonus:12000,ruleText:'House rule: Yaniv at 5 or less',
+   sites:['Beach shack','Spice market','Yoga deck','Scooter rental','Sunset temple'],
+   blurbs:['Cold drinks with your feet in the sand.','Cardamom, chili and haggling.','Sunrise stretches before the first round.','Two wheels to every beach on the coast.','Bells at dusk over the water.'],
+   costs:[4000,8500,12500]},
+];
+const ROUTE=['Lisbon','Goa','Cusco','Hanoi','Rio','Tokyo'];
+const PLOTS=[[118,548],[284,478],[196,372],[74,420],[312,300]]; // anchor (bottom centre) of each landmark in the 390x600 scene
+const BOTS=[
+  {name:'Maya',city:'Tel Aviv',style:'bold',w:.4,color:'#f08a6c',
+   q:{yaniv:['Yaniv! Pay up.','Yaniv. Too slow, friends.'],burned:['No. No no no.','Okay, who taught you to count?'],asaf:['Asaf! Sit down.'],take:['Mine now.','Thanks, I needed that.']}},
+  {name:'Joaquín',city:'Buenos Aires',style:'calc',w:.75,color:'#7cc6e8',
+   q:{yaniv:['Yaniv. The math was clear.'],burned:['Statistically unlikely. Painful.'],asaf:['Asaf. I had a feeling.'],take:['A gift. Gracias.']}},
+  {name:'Ingrid',city:'Oslo',style:'patient',w:.6,color:'#b9a3f0',
+   q:{yaniv:['Yaniv. I waited for this.'],burned:['Hm. Next time.'],asaf:['Asaf. Patience pays.'],take:['I will keep that one.']}},
+];
+
+let uid=1, timer=null, S=null, E=null, toastT=null, resetArmed=false, popSite=-1;
+const bubbleTimers=new Map();
+const $=id=>document.getElementById(id);
+const pickOne=a=>a[Math.floor(Math.random()*a.length)];
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const today=()=>new Date().toDateString();
+
+/* ================= illustrations ================= */
+/* each landmark is drawn around (0,0) = bottom centre; level 0 is an empty plot */
+const plot=()=>`<ellipse cx="0" cy="-4" rx="38" ry="9" fill="#8a7a5c" opacity=".45"/><ellipse cx="0" cy="-4" rx="38" ry="9" fill="none" stroke="#fff" stroke-opacity=".7" stroke-dasharray="4 4"/><rect x="-1.5" y="-40" width="3" height="34" fill="#7a5a3a"/><rect x="-16" y="-48" width="32" height="16" rx="3" fill="#fff"/><path d="M-5 -40H5M0 -45V-35" stroke="#0a2226" stroke-width="2.4" stroke-linecap="round"/>`;
+const wins=(x0,y0,cols,rows,w,h,gx,gy,fill)=>{let s='';for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)s+=`<rect x="${x0+c*(w+gx)}" y="${y0+r*(h+gy)}" width="${w}" height="${h}" rx="1.5" fill="${fill}"/>`;return s};
+const lights=(x1,x2,y,sag)=>{let s=`<path d="M${x1} ${y}Q${(x1+x2)/2} ${y+sag} ${x2} ${y}" stroke="#333" stroke-width=".8" fill="none"/>`;for(let i=1;i<8;i++){const t=i/8,x=x1+(x2-x1)*t,yy=y+sag*2*t*(1-t);s+=`<circle cx="${x}" cy="${yy+1.5}" r="1.8" fill="#ffe08a"/>`}return s};
+const palm=(x,h)=>`<path d="M${x} 0Q${x+4} ${-h/2} ${x-2} ${-h}" stroke="#7a5a3a" stroke-width="4" fill="none" stroke-linecap="round"/><g fill="#3f9b5c"><path d="M${x-2} ${-h}q-22 -2 -30 12q14 -10 30 -12z"/><path d="M${x-2} ${-h}q22 -4 30 10q-14 -8 -30 -10z"/><path d="M${x-2} ${-h}q-8 -18 -24 -18q14 4 24 18z"/><path d="M${x-2} ${-h}q10 -18 26 -16q-16 4 -26 16z"/></g>`;
+function stripes(n,x,y,w,h,a,b){let s='';for(let k=0;k<n;k++)s+=`<rect x="${x+k*w}" y="${y}" width="${w}" height="${h}" fill="${k%2?b:a}"/>`;return s}
+const DRAW=[
+  [ // Lisbon
+    l=>{ // tram
+      let s=`<rect x="-58" y="-8" width="116" height="10" rx="2" fill="#6b6a66"/><path d="M-58 -4H58M-58 -1H58" stroke="#a9a59b" stroke-width="1.2"/>`;
+      if(l>=3)s+=`<path d="M-60 -82H60" stroke="#2b2b2b" stroke-width="1.2"/><path d="M0 -52L10 -82" stroke="#2b2b2b" stroke-width="2"/><rect x="48" y="-50" width="3" height="44" fill="#555"/><circle cx="49.5" cy="-54" r="7" fill="#e3463b"/><text x="49.5" y="-51.5" font-size="7" font-weight="700" text-anchor="middle" fill="#fff">28</text>`;
+      if(l>=2)s+=`<rect x="-42" y="-52" width="84" height="42" rx="8" fill="#f5c400"/><rect x="-42" y="-26" width="84" height="5" fill="#fffaf0"/>${wins(-34,-46,4,1,13,15,6,0,'#2d4a63')}<rect x="-42" y="-16" width="84" height="5" fill="#c79a00"/><circle cx="-24" cy="-9" r="5.5" fill="#222"/><circle cx="24" cy="-9" r="5.5" fill="#222"/><rect x="-8" y="-58" width="16" height="7" rx="2" fill="#2d4a63"/><text x="0" y="-52.5" font-size="6" font-weight="700" text-anchor="middle" fill="#fff">28</text>`;
+      if(l>=3)s+=`<circle cx="-42" cy="-22" r="5" fill="#fff6b0" opacity=".9"/><circle cx="-42" cy="-22" r="12" fill="#fff6b0" opacity=".25"/>`;
+      return s;
+    },
+    l=>{ // café
+      if(l===1)return `<rect x="-20" y="-38" width="40" height="38" fill="#f1e2c8"/>${stripes(4,-24,-50,12,10,'#d9534f','#fff')}<rect x="-13" y="-30" width="26" height="12" fill="#2d4a63"/><rect x="-22" y="-18" width="44" height="4" fill="#8a5a3a"/>`;
+      let s='';
+      if(l>=3)s+=`<rect x="-40" y="-96" width="80" height="34" fill="#f3c3a5"/>${wins(-32,-90,4,1,12,16,8,0,'#2d4a63')}<path d="M-42 -66H42" stroke="#fff" stroke-width="2"/><path d="M-44 -96H44L36 -106H-36Z" fill="#c8603a"/>`;
+      s+=`<rect x="-40" y="-64" width="80" height="64" fill="#e9a3a0"/>${wins(-32,-58,4,1,12,14,8,0,'#2d4a63')}${stripes(8,-44,-40,11,10,'#d9534f','#fff')}<rect x="-10" y="-26" width="20" height="26" fill="#5a3b2a"/><rect x="-34" y="-24" width="18" height="12" fill="#2d4a63"/><rect x="16" y="-24" width="18" height="12" fill="#2d4a63"/>`;
+      if(l>=3)s+=`<g><rect x="-58" y="-12" width="2" height="12" fill="#555"/><circle cx="-57" cy="-12" r="6" fill="#fff"/><rect x="54" y="-12" width="2" height="12" fill="#555"/><circle cx="55" cy="-12" r="6" fill="#fff"/><path d="M-66 -24L-48 -24L-57 -34Z" fill="#d9534f"/><path d="M46 -24L64 -24L55 -34Z" fill="#d9534f"/></g>${lights(-44,44,-66,8)}`;
+      return s;
+    },
+    l=>{ // rooftop hostel
+      if(l===1)return `<rect x="-30" y="-50" width="60" height="50" fill="#f4e3c1"/>${wins(-22,-42,2,2,14,12,16,8,'#2d4a63')}<rect x="-7" y="-18" width="14" height="18" fill="#5a3b2a"/><path d="M-34 -50H34L26 -60H-26Z" fill="#c8603a"/>`;
+      let s=`<rect x="-32" y="-108" width="64" height="108" fill="#f4e3c1"/><rect x="-32" y="-30" width="64" height="30" fill="#3b6fb6"/>${wins(-24,-100,3,4,12,13,8,7,'#2d4a63')}<rect x="-8" y="-22" width="16" height="22" fill="#5a3b2a"/>`;
+      if(l===2)s+=`<path d="M-36 -108H36L28 -120H-28Z" fill="#c8603a"/>`;
+      if(l>=3)s+=`<rect x="-32" y="-112" width="64" height="4" fill="#e0cfa8"/><path d="M-32 -122H32" stroke="#fff" stroke-width="1.5"/>${[-30,-18,-6,6,18,30].map(x=>`<path d="M${x} -112V-122" stroke="#fff" stroke-width="1.2"/>`).join('')}<path d="M-10 -122V-138" stroke="#555" stroke-width="1.5"/><path d="M-26 -136Q-10 -150 6 -136Z" fill="#f2b33d"/><path d="M26 -112V-152" stroke="#555" stroke-width="1.5"/><path d="M26 -152H42L38 -146H26Z" fill="#f2b33d"/><rect x="-24" y="-40" width="48" height="8" rx="2" fill="#123a41"/><text x="0" y="-34" font-size="6" font-weight="700" text-anchor="middle" fill="#f2b33d">HOSTEL</text>${lights(-32,26,-128,6)}`;
+      return s;
+    },
+    l=>{ // fado bar
+      let s=`<rect x="-26" y="-46" width="52" height="46" fill="#fafafa"/><path d="M-30 -46H30L0 -66Z" fill="#c8603a"/><path d="M-8 0V-18A8 8 0 0 1 8 -18V0Z" fill="#5a3b2a"/>`;
+      if(l>=2){for(let r=0;r<3;r++)for(let c=0;c<6;c++){const x=-25+c*8.4,y=-44+r*8.4;if(!(r===2&&c>1&&c<4))s+=`<rect x="${x}" y="${y}" width="7.4" height="7.4" fill="${(r+c)%2?'#3b6fb6':'#7fa6d8'}"/>`}s+=`<rect x="-20" y="-12" width="9" height="9" fill="#2d4a63"/><rect x="11" y="-12" width="9" height="9" fill="#2d4a63"/>`}
+      else s+=`<rect x="-20" y="-36" width="10" height="10" fill="#2d4a63"/><rect x="10" y="-36" width="10" height="10" fill="#2d4a63"/>`;
+      if(l>=3)s+=`<circle cx="0" cy="-58" r="16" fill="#ffb347" opacity=".25"/><rect x="-17" y="-64" width="34" height="12" rx="3" fill="#2a1d04"/><text x="0" y="-55" font-size="8" font-weight="700" text-anchor="middle" fill="#ffb347">FADO</text><rect x="-34" y="-30" width="5" height="8" rx="1.5" fill="#ffd27a"/><rect x="29" y="-30" width="5" height="8" rx="1.5" fill="#ffd27a"/><text x="38" y="-56" font-size="12" fill="#fff">♪</text><text x="-44" y="-48" font-size="10" fill="#fff">♫</text>`;
+      return s;
+    },
+    l=>{ // lighthouse
+      let s=`<path d="M-36 0Q-32 -16 -14 -13Q0 -22 14 -13Q32 -16 36 0Z" fill="#7d7468"/>`;
+      if(l===1)return s+`<path d="M-11 -12L-9 -46H9L11 -12Z" fill="#fff"/><rect x="-11" y="-30" width="22" height="7" fill="#d9534f"/>`;
+      const hw=y=>12-4*((-12-y)/90);
+      const band=(a,b)=>`<path d="M${-hw(a)} ${a}L${-hw(b)} ${b}H${hw(b)}L${hw(a)} ${a}Z" fill="#d9534f"/>`;
+      s+=`<path d="M-12 -12L-8 -102H8L12 -12Z" fill="#fff"/>${band(-28,-44)}${band(-60,-76)}${band(-92,-102)}<rect x="-3" y="-24" width="6" height="12" fill="#5a3b2a"/>`;
+      if(l===2)return s+`<rect x="-9" y="-108" width="18" height="6" fill="#2d4a63"/>`;
+      return `<path d="M0 -112L-150 -150V-74Z" fill="#fff6b0" opacity=".28"/><path d="M0 -112L120 -140V-86Z" fill="#fff6b0" opacity=".2"/>`+s+`<rect x="-11" y="-106" width="22" height="4" fill="#2d4a63"/><rect x="-8" y="-118" width="16" height="12" fill="#2d4a63"/><circle cx="0" cy="-112" r="5" fill="#fff6b0"/><path d="M-11 -118H11L0 -128Z" fill="#d9534f"/>`;
+    },
+  ],
+  [ // Goa
+    l=>{ // beach shack
+      let s=`${[-30,-12,12,30].map(x=>`<rect x="${x-1.5}" y="-18" width="3" height="18" fill="#7a5a3a"/>`).join('')}<rect x="-38" y="-22" width="76" height="6" fill="#a0703f"/>`;
+      if(l>=3)s+=palm(46,90);
+      if(l>=2)s+=`<rect x="-28" y="-50" width="56" height="28" fill="#d8b07a"/><rect x="-8" y="-42" width="16" height="20" fill="#5a3b2a"/><rect x="-24" y="-44" width="10" height="8" fill="#2d4a63"/><rect x="14" y="-44" width="10" height="8" fill="#2d4a63"/><path d="M-40 -50L0 -78L40 -50Z" fill="#b8863b"/><path d="M-30 -55L-6 -72M-14 -52L8 -70M4 -52L22 -66M20 -52L30 -60" stroke="#8f6526" stroke-width="1.2"/>`;
+      if(l>=3)s+=`<rect x="-14" y="-60" width="28" height="9" rx="2" fill="#123a41"/><text x="0" y="-53.5" font-size="6" font-weight="700" text-anchor="middle" fill="#f2b33d">BAR</text>${lights(-38,38,-50,6)}`;
+      return s;
+    },
+    l=>{ // spice market
+      const stall=(x,a)=>`<rect x="${x-16}" y="-16" width="32" height="16" fill="#8a5a3a"/>${[x-10,x,x+10].map((cx,i)=>`<circle cx="${cx}" cy="-18" r="4.5" fill="${['#e2452f','#f2b33d','#a2c94a'][i]}"/>`).join('')}<rect x="${x-17}" y="-40" width="2" height="24" fill="#5a3b2a"/><rect x="${x+15}" y="-40" width="2" height="24" fill="#5a3b2a"/>${stripes(4,x-20,-46,10,8,a,'#fff')}`;
+      let s=l===1?stall(0,'#e2452f'):stall(-34,'#e2452f')+stall(0,'#2f9aa0')+stall(34,'#9b59b6');
+      if(l>=3){s+=`<path d="M-54 -56Q0 -46 54 -56" stroke="#333" stroke-width=".8" fill="none"/>`;for(let i=0;i<9;i++){const x=-48+i*12;s+=`<path d="M${x-4} ${-53+Math.abs(i-4)*-.4}L${x+4} ${-53+Math.abs(i-4)*-.4}L${x} ${-46}Z" fill="${['#e2452f','#f2b33d','#2f9aa0'][i%3]}"/>`}s+=`<circle cx="-54" cy="-56" r="4" fill="#ffd27a"/><circle cx="54" cy="-56" r="4" fill="#ffd27a"/>`}
+      return s;
+    },
+    l=>{ // yoga deck
+      let s=`<rect x="-46" y="-12" width="92" height="7" fill="#b07a45"/>${[-40,-14,14,40].map(x=>`<rect x="${x-1.5}" y="-6" width="3" height="6" fill="#7a5a3a"/>`).join('')}`;
+      if(l>=3)s+=palm(-56,80)+palm(58,70);
+      if(l>=2)s+=`<rect x="-40" y="-64" width="3" height="52" fill="#7a5a3a"/><rect x="37" y="-64" width="3" height="52" fill="#7a5a3a"/><path d="M-44 -64Q0 -76 44 -64L40 -56Q0 -66 -40 -56Z" fill="#fffaf0"/><rect x="-30" y="-15" width="16" height="3" fill="#e2452f"/><rect x="-6" y="-15" width="16" height="3" fill="#2f9aa0"/><rect x="18" y="-15" width="16" height="3" fill="#9b59b6"/>`;
+      if(l>=3)s+=`<circle cx="2" cy="-36" r="4" fill="#5a3b2a"/><path d="M-6 -16L2 -32L10 -16Z" fill="#f2b33d"/><path d="M-10 -26L14 -26" stroke="#5a3b2a" stroke-width="2" stroke-linecap="round"/>`;
+      return s;
+    },
+    l=>{ // scooter rental
+      const scooter=x=>`<g transform="translate(${x},0)"><circle cx="-9" cy="-5" r="5" fill="#222"/><circle cx="11" cy="-5" r="5" fill="#222"/><path d="M-12 -10H6L12 -24H16" stroke="#e2452f" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="-14" y="-16" width="12" height="4" rx="2" fill="#333"/></g>`;
+      let s=`<rect x="-26" y="-40" width="52" height="40" fill="#7cc6e8"/><rect x="-8" y="-24" width="16" height="24" fill="#2d4a63"/><rect x="-22" y="-32" width="10" height="9" fill="#fffaf0"/><rect x="12" y="-32" width="10" height="9" fill="#fffaf0"/>`;
+      if(l>=2)s+=`<rect x="-22" y="-52" width="44" height="12" rx="2" fill="#f2b33d"/><text x="0" y="-43" font-size="8" font-weight="700" text-anchor="middle" fill="#2a1d04">RENT</text>${scooter(44)}`;
+      if(l>=3)s+=`${scooter(-44)}${stripes(6,-30,-40,10,6,'#e2452f','#fff')}<path d="M26 -40V-70" stroke="#555" stroke-width="1.5"/><path d="M26 -70H40L36 -64H26Z" fill="#2f9aa0"/>`;
+      return s;
+    },
+    l=>{ // sunset temple
+      let s=`<rect x="-42" y="-7" width="84" height="7" fill="#d9c3a0"/><rect x="-34" y="-14" width="68" height="7" fill="#e6d3b0"/><rect x="-26" y="-21" width="52" height="7" fill="#d9c3a0"/>`;
+      if(l===1)return s+`<rect x="-1.5" y="-46" width="3" height="25" fill="#7a5a3a"/><rect x="-14" y="-52" width="28" height="12" rx="3" fill="#fff"/><path d="M-5 -46H5M0 -51V-41" stroke="#0a2226" stroke-width="2.2" stroke-linecap="round"/>`;
+      if(l>=3)s=`<circle cx="0" cy="-90" r="40" fill="#ffd28a" opacity=".3"/>`+s;
+      s+=`<rect x="-20" y="-47" width="40" height="26" fill="#e8a35a"/><rect x="-6" y="-37" width="12" height="16" rx="6" fill="#5a3b2a"/><rect x="-15" y="-67" width="30" height="20" fill="#f2b33d"/><rect x="-10" y="-84" width="20" height="17" fill="#e8a35a"/>${[-14,14].map(x=>`<circle cx="${x}" cy="-54" r="2" fill="#5a3b2a"/>`).join('')}`;
+      if(l===2)s+=`<path d="M-12 -84H12L0 -96Z" fill="#c8603a"/>`;
+      if(l>=3)s+=`<path d="M-12 -84Q-12 -104 0 -108Q12 -104 12 -84Z" fill="#f2b33d"/><path d="M0 -108V-124" stroke="#7a5a3a" stroke-width="1.5"/><path d="M0 -124H14L10 -118H0Z" fill="#e2452f"/><circle cx="-28" cy="-24" r="3" fill="#ffd27a"/><circle cx="28" cy="-24" r="3" fill="#ffd27a"/>`;
+      return s;
+    },
+  ],
+];
+const HEIGHTS=[[[50,12,60,84],[50,52,66,108],[50,62,122,154],[50,68,68,76],[50,48,110,130]],[[50,24,80,92],[50,50,50,60],[50,14,78,82],[50,42,54,72],[50,54,98,130]]]; // drawing height per level
+function sceneBG(ci,id){
+  if(ci===0) return `<defs><linearGradient id="${id}-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fb7dd"/><stop offset=".6" stop-color="#bfe0ea"/><stop offset="1" stop-color="#fbe3b8"/></linearGradient></defs>
+    <rect width="390" height="600" fill="url(#${id}-sky)"/><circle cx="300" cy="120" r="34" fill="#fff3c4" opacity=".9"/>
+    <path d="M0 200Q60 170 130 190T260 180T390 170V250H0Z" fill="#8fa9a0" opacity=".7"/>
+    <rect y="230" width="390" height="56" fill="#3f86b0"/><path d="M20 248h40M110 262h60M230 250h50M300 270h40" stroke="#bfe0ea" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+    <path d="M250 300Q300 262 390 270V320H250Z" fill="#cbb98f"/>
+    <path d="M0 330Q80 300 170 312T390 318V600H0Z" fill="#ecd7aa"/>
+    <path d="M0 392Q120 370 220 386T390 388V600H0Z" fill="#e2c995"/>
+    <g opacity=".55">${[[20,310],[150,302],[250,330],[360,340]].map(([x,y])=>`<rect x="${x}" y="${y}" width="22" height="18" fill="#f4e3c1"/><path d="M${x-2} ${y}h26l-4 -6h-18z" fill="#c8603a"/>`).join('')}</g>
+    <path d="M0 470Q140 452 260 466T390 462V600H0Z" fill="#d7bb85"/>
+    <rect y="556" width="390" height="44" fill="#9c8a6a"/>`;
+  return `<defs><linearGradient id="${id}-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2c5e"/><stop offset=".55" stop-color="#f08a6c"/><stop offset="1" stop-color="#ffd28a"/></linearGradient></defs>
+    <rect width="390" height="600" fill="url(#${id}-sky)"/><circle cx="195" cy="236" r="58" fill="#ffe2a0" opacity=".95"/>
+    <rect y="236" width="390" height="70" fill="#2f7d9a"/><path d="M150 252h90M170 266h50M120 280h150M60 260h40M300 272h50" stroke="#ffd28a" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+    <path d="M0 300Q100 290 200 300T390 296V600H0Z" fill="#f3dcab"/>
+    <path d="M0 410Q130 396 250 410T390 404V600H0Z" fill="#ebcf98"/>
+    <g transform="translate(16,330)">${palm(0,70)}</g><g transform="translate(376,350)">${palm(0,80)}</g>
+    <path d="M0 500Q160 488 300 502T390 498V600H0Z" fill="#e2c28a"/>`;
+}
+function sceneSVG(ci,levels,{interactive=false,id='s'}={}){
+  const c=COUNTRIES[ci];
+  let s=`<svg viewBox="${interactive?'0 0 390 600':'0 170 390 400'}" preserveAspectRatio="${interactive?'xMidYMax':'xMidYMid'} slice" role="img" aria-label="${c.city}, ${levels.reduce((a,b)=>a+b,0)} of 15 levels built" xmlns="http://www.w3.org/2000/svg" font-family="Outfit, system-ui, sans-serif">${sceneBG(ci,id)}`;
+  const order=[4,2,3,1,0]; // back to front
+  for(const i of order){
+    const [x,y]=PLOTS[i], l=levels[i], h=HEIGHTS[ci][i][l]||50;
+    const body=l===0?plot():DRAW[ci][i](l);
+    if(!interactive){s+=`<g transform="translate(${x},${y})">${body}</g>`;continue}
+    const cost=l<3?c.costs[l]:0, can=l<3&&E.coins>=cost;
+    const name=c.sites[i], pw=name.length*6.2+34;
+    s+=`<g class="lm ${popSite===i?'pop':''}" data-act="site" data-i="${i}" tabindex="0" role="button" aria-label="${name}, level ${l} of 3" transform="translate(${x},${y})">
+      <rect x="-60" y="${-h-20}" width="120" height="${h+44}" fill="transparent"/>
+      <g class="bodyg">${body}</g>
+      <g transform="translate(0,14)"><rect class="pillbg" x="${-pw/2}" y="-9" width="${pw}" height="18" rx="9" fill="#fffaf0" stroke="#0a2226" stroke-opacity=".15"/>
+        <text x="${-pw/2+10}" y="4" font-size="10.5" font-weight="700" fill="#1c2427">${name}</text>
+        ${[0,1,2].map(k=>`<circle cx="${pw/2-22+k*7}" cy="0" r="2.6" fill="${k<l?'#e8a01c':'#d6cbb1'}"/>`).join('')}</g>
+      ${can?`<g transform="translate(0,${-h-12})"><g class="up"><circle r="11" fill="#f2b33d" stroke="#2a1d04" stroke-width="1.5"/><path d="M0 5V-5M-4.5 -1L0 -5.5L4.5 -1" stroke="#2a1d04" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>`:''}
+    </g>`;
+  }
+  return s+'</svg>';
+}
+
+/* ================= sound (synthesized, no audio files) ================= */
+const AUD=(()=>{
+  let ctx=null, master, sfxBus, musicBus, verb, mverb, musicTimer=null;
+  let prefs={sfx:true,music:true};
+  try{prefs={...prefs,...JSON.parse(localStorage.getItem('yaniv-sound')||'{}')}}catch(e){}
+  const save=()=>{try{localStorage.setItem('yaniv-sound',JSON.stringify(prefs))}catch(e){}};
+  const mtof=m=>440*2**((m-69)/12);
+  function impulse(sec){
+    const len=ctx.sampleRate*sec, b=ctx.createBuffer(2,len,ctx.sampleRate);
+    for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4)}
+    return b;
+  }
+  function init(){
+    if(ctx)return true;
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC)return false;
+    ctx=new AC();
+    master=ctx.createGain(); master.gain.value=.9; master.connect(ctx.destination);
+    sfxBus=ctx.createGain(); sfxBus.gain.value=prefs.sfx?1:0; sfxBus.connect(master);
+    musicBus=ctx.createGain(); musicBus.gain.value=0; musicBus.connect(master);
+    verb=ctx.createConvolver(); verb.buffer=impulse(2.2);
+    const wet=ctx.createGain(); wet.gain.value=.28; verb.connect(wet); wet.connect(sfxBus);
+    mverb=ctx.createConvolver(); mverb.buffer=impulse(2.6);
+    const mwet=ctx.createGain(); mwet.gain.value=.3; mverb.connect(mwet); mwet.connect(musicBus);
+    return true;
+  }
+  function unlock(){
+    if(!init())return;
+    if(ctx.state==='suspended')ctx.resume();
+    if(prefs.music&&!musicTimer&&document.visibilityState==='visible')startMusic();
+  }
+  // one shaped tone
+  function tone(f,{dur=.2,type='sine',vol=.2,at=0,attack=.005,to=null,bus=sfxBus,send=0,lp=null}={}){
+    if(!ctx)return;
+    const t=ctx.currentTime+at, o=ctx.createOscillator(), g=ctx.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t); if(to)o.frequency.exponentialRampToValueAtTime(to,t+dur);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    let node=o;
+    if(lp){const f2=ctx.createBiquadFilter();f2.type='lowpass';f2.frequency.value=lp;o.connect(f2);node=f2}
+    node.connect(g); g.connect(bus);
+    if(send){const s=ctx.createGain();s.gain.value=send;g.connect(s);s.connect(verb)}
+    o.start(t); o.stop(t+dur+.05);
+  }
+  // filtered noise burst: card swish, paper, thump
+  function noise({dur=.12,vol=.15,at=0,freq=2500,q=.8,type='bandpass',sweep=null}={}){
+    if(!ctx)return;
+    const t=ctx.currentTime+at, len=Math.ceil(ctx.sampleRate*dur), b=ctx.createBuffer(1,len,ctx.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+    const src=ctx.createBufferSource(); src.buffer=b;
+    const f=ctx.createBiquadFilter(); f.type=type; f.Q.value=q; f.frequency.setValueAtTime(freq,t); if(sweep)f.frequency.exponentialRampToValueAtTime(sweep,t+dur);
+    const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    src.connect(f); f.connect(g); g.connect(sfxBus); src.start(t); src.stop(t+dur);
+  }
+  const SFX={
+    tap(){noise({dur:.04,vol:.12,freq:3800,q:1.5});tone(1100,{dur:.06,type:'triangle',vol:.05})},
+    untap(){noise({dur:.04,vol:.08,freq:2600,q:1.5});tone(760,{dur:.05,type:'triangle',vol:.04})},
+    click(){tone(1500,{dur:.035,type:'square',vol:.025,lp:3000})},
+    drop(k=1){noise({dur:.16,vol:.22*k,freq:1800,sweep:700,q:.7});tone(150,{dur:.09,vol:.18*k,to:90})},
+    draw(){noise({dur:.14,vol:.14,freq:900,sweep:4200,q:.6,type:'bandpass'})},
+    take(){noise({dur:.1,vol:.12,freq:2400,sweep:1200});tone(660,{dur:.08,type:'triangle',vol:.05,at:.05})},
+    deal(){for(let i=0;i<5;i++)noise({dur:.08,vol:.12,freq:2200+i*150,sweep:900,at:i*.07})},
+    nope(){tone(140,{dur:.12,type:'square',vol:.05,lp:900});tone(120,{dur:.12,type:'square',vol:.05,lp:900,at:.1})},
+    turn(ready){tone(988,{dur:.35,vol:.07,send:.4});tone(ready?1480:1319,{dur:.45,vol:.07,at:.1,send:.4})},
+    bell(){[[1568,.14],[3920,.05],[2349,.06]].forEach(([f,v])=>tone(f,{dur:1.1,vol:v,send:.5}));[[1568,.1],[3920,.04]].forEach(([f,v])=>tone(f,{dur:.9,vol:v,at:.18,send:.5}))},
+    coins(){[0,.07,.14,.22].forEach((a,i)=>{tone(1568*(i%2?1.335:1),{dur:.25,type:'square',vol:.035,at:a,lp:5000,send:.3});tone(3136,{dur:.12,vol:.03,at:a})});noise({dur:.18,vol:.05,freq:6000,q:2,at:.02})},
+    win(){for(let i=0;i<14;i++)tone(1200+Math.random()*1400,{dur:.22,vol:.05,at:i*.045,send:.3});[523,659,784,1047].forEach((f,i)=>tone(f,{dur:.5,type:'triangle',vol:.09,at:.1+i*.09,send:.4}))},
+    lose(){tone(392,{dur:.35,type:'triangle',vol:.09,lp:1500,send:.3});tone(330,{dur:.6,type:'triangle',vol:.09,at:.28,lp:1500,send:.3})},
+    buy(){[880,1109,1319,1760].forEach((f,i)=>tone(f,{dur:.3,vol:.07,at:i*.06,send:.45}));SFX.coins()},
+    yaniv(){
+      [[523,0],[659,.09],[784,.18],[1047,.27]].forEach(([f,a])=>{tone(f,{dur:.18,type:'sawtooth',vol:.06,at:a,lp:2600,send:.3})});
+      [523,659,784,1047].forEach(f=>tone(f,{dur:.9,type:'sawtooth',vol:.045,at:.38,lp:2200,send:.5}));
+      tone(110,{dur:.25,vol:.25,at:.38,to:60});noise({dur:.3,vol:.12,freq:5000,q:.5,type:'highpass',at:.38});
+    },
+    asaf(){
+      [[392,0,.3],[370,.32,.3],[349,.64,.3],[330,.96,.9]].forEach(([f,a,d])=>tone(f,{dur:d,type:'sawtooth',vol:.08,at:a,lp:900,send:.3}));
+      if(!ctx)return; const t=ctx.currentTime+.96,o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=6;g.gain.value=8;o.connect(g);o.start(t);o.stop(t+.9);
+    },
+    fanfare(){SFX.yaniv();setTimeout(SFX.win,700)},
+  };
+  // ---- background music: a soft lo-fi lounge loop per city ----
+  // Everything musical (notes, drums, echo) goes through musicBus, so muting it is instant and total.
+  const SONGS=[
+    {bpm:76, chords:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]], shaker:false}, // Lisbon: Fmaj7 Em7 Dm7 Cmaj7
+    {bpm:84, chords:[[57,60,64,67],[50,54,57,64],[55,59,62,66],[48,52,55,59]], shaker:true},  // Goa: Am7 D9 Gmaj7 Cmaj7
+  ];
+  let gen=0;
+  function keys(notes,t,vol){ // electric-piano chord, slightly strummed
+    notes.forEach((m,i)=>{
+      const tt=t+i*.018, o=ctx.createOscillator(), o2=ctx.createOscillator(), g=ctx.createGain(), f=ctx.createBiquadFilter();
+      o.type='sine'; o2.type='triangle'; o.frequency.value=mtof(m); o2.frequency.value=mtof(m)*2;
+      f.type='lowpass'; f.frequency.value=1600;
+      g.gain.setValueAtTime(0,tt); g.gain.linearRampToValueAtTime(vol,tt+.02); g.gain.exponentialRampToValueAtTime(.0001,tt+2.6);
+      const g2=ctx.createGain(); g2.gain.value=.12; o2.connect(g2); g2.connect(f); o.connect(f); f.connect(g); g.connect(musicBus);
+      const s=ctx.createGain(); s.gain.value=.35; g.connect(s); s.connect(mverb);
+      o.start(tt); o2.start(tt); o.stop(tt+2.7); o2.stop(tt+2.7);
+    });
+  }
+  function bass(m,t){const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=mtof(m);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.16,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.9);o.connect(g);g.connect(musicBus);o.start(t);o.stop(t+1)}
+  function kick(t){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(110,t);o.frequency.exponentialRampToValueAtTime(45,t+.18);g.gain.setValueAtTime(.32,t);g.gain.exponentialRampToValueAtTime(.0001,t+.28);o.connect(g);g.connect(musicBus);o.start(t);o.stop(t+.3)}
+  function hiss(t,{dur=.04,vol=.03,freq=8000,type='highpass'}={}){
+    const len=Math.ceil(ctx.sampleRate*dur),b=ctx.createBuffer(1,len,ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+    const s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();s.buffer=b;f.type=type;f.frequency.value=freq;
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f);f.connect(g);g.connect(musicBus);s.start(t);s.stop(t+dur);
+  }
+  function startMusic(){
+    if(!ctx||!prefs.music)return;
+    stopMusic();
+    const my=++gen;
+    musicBus.gain.cancelScheduledValues(ctx.currentTime);
+    musicBus.gain.setTargetAtTime(.5,ctx.currentTime,.3);
+    let next=ctx.currentTime+.2, step=0;
+    musicTimer=setInterval(()=>{
+      if(my!==gen)return;
+      const song=SONGS[Math.min(typeof E!=='undefined'&&E?E.country:0,SONGS.length-1)];
+      const six=60/song.bpm/4;
+      while(next<ctx.currentTime+.5){
+        const bar=Math.floor(step/16)%song.chords.length, i=step%16, ch=song.chords[bar];
+        const t=next+(i%2?six*.18:0); // swing
+        if(i===0)keys(ch,t,.045);
+        if(i===10)keys(ch.slice(1),t,.025);
+        if(i===0||i===8)bass(ch[0]-12,t);
+        if(i===0||i===7||i===10)kick(t);
+        if(i===4||i===12)hiss(t,{dur:.14,vol:.07,freq:1800,type:'bandpass'});
+        if(i%2===0)hiss(t,{vol:i%4===0?.025:.015});
+        if(song.shaker&&i%2===1)hiss(t,{dur:.06,vol:.012,freq:6000});
+        if(Math.random()<.08)hiss(t,{dur:.008,vol:.04,freq:3000}); // vinyl crackle
+        next+=six; step++;
+      }
+    },100);
+  }
+  function stopMusic(){
+    gen++; clearInterval(musicTimer); musicTimer=null;
+    if(ctx){musicBus.gain.cancelScheduledValues(ctx.currentTime);musicBus.gain.setTargetAtTime(0,ctx.currentTime,.03)}
+  }
+  function set(k,v){
+    prefs[k]=v; save();
+    if(!init())return;
+    if(k==='sfx'){sfxBus.gain.cancelScheduledValues(ctx.currentTime);sfxBus.gain.setTargetAtTime(v?1:0,ctx.currentTime,.03)}
+    if(k==='music'){if(v){if(ctx.state==='suspended')ctx.resume();startMusic()}else stopMusic()}
+  }
+  document.addEventListener('pointerdown',unlock,true);
+  document.addEventListener('visibilitychange',()=>{
+    if(!ctx)return;
+    if(document.visibilityState==='hidden'){stopMusic();ctx.suspend()}
+    else{ctx.resume();if(prefs.music)startMusic()}
+  });
+  return {SFX,set,prefs:()=>prefs,unlock};
+})();
+const SFX=new Proxy({}, {get:(_,k)=>(...a)=>{try{AUD.SFX[k]?.(...a)}catch(e){}}});
+function renderMute(){document.querySelectorAll('.mutebtn').forEach(b=>{const p=AUD.prefs(),on=p.sfx||p.music;b.innerHTML=on?SPK_ON:SPK_OFF;b.setAttribute('aria-label',on?'Mute sound':'Turn sound on');b.classList.toggle('off',!on)})}
+
+const SPK_ON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const SPK_OFF='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+function resultSound(){
+  const r=S.result; if(!r)return;
+  if(S.mode==='sprint'){ if(r.place===0)SFX.win(); else if(r.pay+r.bonus>0&&r.place<3)SFX.coins(); else SFX.lose(); }
+  else if(S.mode==='champion'){ r.won?SFX.fanfare():SFX.lose(); }
+  else if(S.mode==='duel'){ r.won?SFX.win():SFX.lose(); }
+  else { const me=r.rows.find(x=>x.human); if(me&&me.add===0)SFX.coins(); else if(me&&me.caller&&r.asaf)SFX.lose(); }
+}
+
+/* ================= power cards ================= */
+const PERKS={
+  tram:{name:'Tram 28',price:2000,text:'The first time you draw from the deck, see 2 cards and keep 1.'},
+  nata:{name:'Pastel de nata',price:3000,text:'You start every round with 4 cards instead of 5.'},
+  fado:{name:'Fado',price:2500,text:'You can call Yaniv with up to 2 points more than the city rule.'},
+  shield:{name:'Asaf insurance',price:1500,text:'Caught in an Asaf? You still get the 2nd-place prize.'},
+  light:{name:'Lighthouse',price:4000,text:'You always see the top card of the deck.'},
+  pick:{name:'Pickpocket',price:2000,text:'Once per round, take any card from a run, not just the ends.'},
+};
+const PERK_ORDER=['shield','tram','pick','fado','nata','light'];
+const SLOTS=3;
+const CHAMPS=[
+  {name:'Dona Amália',short:'Amália',city:'Lisbon',style:'calc',w:.9,color:'#e86f9a',fee:5000,prize:5000,
+   q:{yaniv:['Yaniv. Lisbon is mine, querido.'],burned:['Ai! Well played.'],asaf:['Asaf. You must be patient in Lisbon.'],take:['Obrigada.']}},
+  {name:'Raj the Ace',short:'Raj',city:'Goa',style:'calc',w:.9,color:'#5fc4a8',fee:15000,prize:12000,
+   q:{yaniv:['Yaniv. The ocean told me.'],burned:['Hm. Respect.'],asaf:['Asaf! Not on my beach.'],take:['Thank you, friend.']}},
+];
+function perkArt(id){
+  const s={
+    tram:`<rect x="8" y="14" width="32" height="20" rx="5" fill="#f5c400"/><rect x="12" y="18" width="7" height="7" rx="1" fill="#2d4a63"/><rect x="21" y="18" width="7" height="7" rx="1" fill="#2d4a63"/><rect x="30" y="18" width="7" height="7" rx="1" fill="#2d4a63"/><rect x="8" y="28" width="32" height="2.5" fill="#fff"/><circle cx="15" cy="36" r="3" fill="#222"/><circle cx="33" cy="36" r="3" fill="#222"/><path d="M24 14L28 6M18 6H38" stroke="#333" stroke-width="1.5"/>`,
+    nata:`<ellipse cx="24" cy="27" rx="17" ry="11" fill="#c98a3e"/><ellipse cx="24" cy="25" rx="13" ry="8" fill="#f3c35a"/><circle cx="20" cy="23" r="2.2" fill="#8a4b12"/><circle cx="27" cy="26" r="2.6" fill="#8a4b12"/><circle cx="25" cy="21" r="1.5" fill="#8a4b12"/>`,
+    fado:`<circle cx="18" cy="31" r="9" fill="#c8603a"/><circle cx="25" cy="24" r="7" fill="#c8603a"/><circle cx="20" cy="29" r="2.6" fill="#2a1d04"/><path d="M26 23L39 10" stroke="#5a3b2a" stroke-width="3.5" stroke-linecap="round"/><path d="M36 9l4 4" stroke="#2a1d04" stroke-width="3" stroke-linecap="round"/>`,
+    shield:`<path d="M24 7L38 12V23C38 32 31 38 24 41C17 38 10 32 10 23V12Z" fill="#7cc6e8"/><path d="M17 24l5 5 9-10" stroke="#0a2226" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+    light:`<path d="M24 14L6 6V22Z" fill="#fff6b0" opacity=".7"/><path d="M19 42L21 16H27L29 42Z" fill="#fff"/><path d="M20.2 26H27.8L28.3 32H19.7Z" fill="#d9534f"/><rect x="20" y="10" width="8" height="6" fill="#2d4a63"/><path d="M19 10H29L24 5Z" fill="#d9534f"/><circle cx="24" cy="13" r="2" fill="#fff6b0"/>`,
+    pick:`<rect x="8" y="14" width="14" height="20" rx="2" fill="#fbf6ea" transform="rotate(-14 15 24)"/><rect x="26" y="14" width="14" height="20" rx="2" fill="#fbf6ea" transform="rotate(14 33 24)"/><rect x="17" y="8" width="14" height="20" rx="2" fill="#f2b33d"/><path d="M24 40V31M20 34l4-4 4 4" stroke="#fbf6ea" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+  }[id];
+  return `<svg viewBox="0 0 48 48" aria-hidden="true">${s}</svg>`;
+}
+
+/* ================= economy (saved on this device) ================= */
+function freshEcon(){return {tickets:TICKET_CAP,lastRegen:Date.now(),coins:2000,country:0,owned:[],equipped:[],stamps:[],dailyDay:'',adsDay:'',ads:0,mult:1,stake:1000,rival:0}}
+function loadEcon(){try{const e=JSON.parse(localStorage.getItem('yaniv-econ')||'null');if(e&&e.owned)return {...freshEcon(),...e}}catch(err){}return freshEcon()}
+function saveEcon(){try{localStorage.setItem('yaniv-econ',JSON.stringify(E))}catch(err){}}
+function regen(){
+  if(E.tickets>=TICKET_CAP){E.lastRegen=Date.now();return false}
+  let changed=false;
+  while(E.tickets<TICKET_CAP&&Date.now()-E.lastRegen>=REGEN_MS){E.tickets++;E.lastRegen+=REGEN_MS;changed=true}
+  if(E.tickets>=TICKET_CAP)E.lastRegen=Date.now();
+  if(changed)saveEcon();
+  return changed;
+}
+function nextTicketIn(){const ms=Math.max(0,REGEN_MS-(Date.now()-E.lastRegen));const m=Math.floor(ms/60000),s=Math.floor(ms%60000/1000);return `${m}:${String(s).padStart(2,'0')}`}
+const C=()=>COUNTRIES[E.country];
+const canBuyAny=()=>PERK_ORDER.some(k=>!E.owned.includes(k)&&E.coins>=PERKS[k].price);
+function bump(id){const el=$(id);el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}
+function toast(t){const el=$('toast');el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600)}
+function addCoins(n){E.coins+=n;saveEcon();bump('r-coin')}
+const FULL=[3,3,3,3,3];
+
+/* ================= cards ================= */
+function newDeck(){const d=[];for(const s of 'SHDC')for(let r=1;r<=13;r++)d.push({id:'c'+(uid++),r,s});d.push({id:'c'+(uid++),r:0,s:'J'},{id:'c'+(uid++),r:0,s:'J'});return d}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const val=c=>c.r===0?0:Math.min(c.r,10);
+const total=h=>h.reduce((a,c)=>a+val(c),0);
+const rankLabel=r=>r===0?'★':({1:'A',11:'J',12:'Q',13:'K'}[r]||String(r));
+const rankName=r=>({1:'Aces',11:'Jacks',12:'Queens',13:'Kings'}[r]||r+'s');
+const label=c=>c.r===0?'Joker':rankLabel(c.r)+SUITS[c.s];
+function validate(cards){
+  const n=cards.length; if(!n) return null;
+  if(n===1) return {type:'single',cards:[...cards]};
+  const jok=cards.filter(c=>c.r===0), nat=cards.filter(c=>c.r!==0);
+  if(!nat.length) return {type:'set',cards:[...cards]};
+  if(nat.every(c=>c.r===nat[0].r)) return {type:'set',cards:[...nat,...jok]};
+  if(n>=3&&n<=13&&nat.every(c=>c.s===nat[0].s)){
+    const sorted=[...nat].sort((a,b)=>a.r-b.r);
+    for(let i=1;i<sorted.length;i++) if(sorted[i].r===sorted[i-1].r) return null;
+    const lo=sorted[0].r, hi=sorted[sorted.length-1].r, span=hi-lo+1;
+    if(span>n) return null;
+    const extra=n-span, addHigh=Math.min(extra,13-hi), start=lo-(extra-addHigh), end=hi+addHigh;
+    const js=[...jok], out=[]; let k=0;
+    for(let r=start;r<=end;r++){ if(k<sorted.length&&sorted[k].r===r) out.push(sorted[k++]); else out.push(js.pop()); }
+    return {type:'run',cards:out};
+  }
+  return null;
+}
+function describe(v){
+  const c=v.cards;
+  if(v.type==='single') return label(c[0]);
+  const nat=c.find(x=>x.r!==0);
+  if(v.type==='set'){const nm={2:'a pair',3:'three',4:'four',5:'five',6:'six'}[c.length]||c.length;return `${nm} of ${nat?rankName(nat.r):'Jokers'}`}
+  return `a ${SUITS[nat.s]} run ${c.map(x=>rankLabel(x.r)).join('-')}`;
+}
+function allSets(hand){const n=hand.length,res=[];for(let m=1;m<(1<<n);m++){const cs=[];for(let i=0;i<n;i++)if(m&(1<<i))cs.push(hand[i]);const v=validate(cs);if(v)res.push({...v,pts:total(cs),ids:cs.map(c=>c.id)})}return res}
+function bestDump(hand){let b=0;for(const o of allSets(hand))if(o.pts>b)b=o.pts;return b}
+
+/* ================= game ================= */
+function loadRules(){try{const r=JSON.parse(localStorage.getItem('yaniv-rules')||'null');if(r)return {...DEFAULT_RULES,...r}}catch(e){}return {...DEFAULT_RULES}}
+function saveRules(r){try{localStorage.setItem('yaniv-rules',JSON.stringify(r))}catch(e){}}
+const active=()=>S.players.filter(p=>!p.out);
+function nextActive(i){const n=S.players.length;for(let k=1;k<=n;k++){const j=(i+k)%n;if(!S.players[j].out)return j}return i}
+function schedule(fn,ms){clearTimeout(timer);timer=setTimeout(fn,ms)}
+function addLog(t){S.log.unshift(t);S.log=S.log.slice(0,2)}
+const has=k=>(S.perks||[]).includes(k);
+const myYanivAt=()=>S.g.yanivAt+(has('fado')?2:0);
+const placementMode=()=>['sprint','champion','duel'].includes(S.mode);
+function seat(list){
+  S.players=[{name:'You',human:true,color:ME_COLOR,bot:null},...list].map(p=>({...p,hand:[],score:0,out:false,said:''}));
+  S.round=1; S.log=[]; S.choice=null; S.used={};
+}
+const botSeat=i=>({...BOTS[i],human:false,bot:BOTS[i]});
+function begin(mode,extra={}){
+  clearTimeout(timer);
+  Object.assign(S,{mode,choice:null,used:{},...extra});
+  S.perks=['sprint','champion'].includes(mode)?[...E.equipped]:[];
+  S.screen='table'; startRound();
+}
+function startSprint(){
+  const m=E.mult; regen();
+  if(E.tickets<m){toast(`You need ${m} ticket${m>1?'s':''}. Wait for a refill or grab free tickets.`);return}
+  E.tickets-=m; saveEcon();
+  S.g={...DEFAULT_RULES,yanivAt:C().yanivAt,handSize:5};
+  seat([botSeat(0),botSeat(1),botSeat(2)]); S.starter=Math.floor(Math.random()*4);
+  begin('sprint',{mult:m,cIdx:E.country});
+}
+function startChampion(){
+  const ch=CHAMPS[E.country];
+  if(E.coins<ch.fee){toast(`The entry is ${fmt(ch.fee)} coins. Win a few more rounds first.`);return}
+  E.coins-=ch.fee; saveEcon(); bump('r-coin');
+  S.g={...DEFAULT_RULES,yanivAt:C().yanivAt,handSize:5};
+  seat([{...ch,human:false,bot:ch},{...botSeat(1),bot:{...BOTS[1],w:.85}},{...botSeat(2),bot:{...BOTS[2],style:'calc',w:.85}}]);
+  S.starter=1;
+  begin('champion',{cIdx:E.country,mult:1});
+}
+function startDuel(){
+  const st=E.stake;
+  if(E.coins<st){toast(`You need ${fmt(st)} coins for this duel.`);return}
+  E.coins-=st; saveEcon(); bump('r-coin');
+  S.g={...DEFAULT_RULES,yanivAt:7,handSize:5};
+  seat([botSeat(E.rival)]); S.starter=Math.floor(Math.random()*2);
+  begin('duel',{stake:st,mult:1,cIdx:E.country});
+}
+function startClassic(){
+  S.g={...S.rules};
+  seat(BOTS.slice(0,S.g.bots).map((_,i)=>botSeat(i))); S.starter=0;
+  begin('classic');
+}
+function startRound(){
+  S.deck=shuffle(newDeck()); S.buried=[]; S.used={}; SFX.deal();
+  for(const p of S.players){p.hand=[];p.said='';if(!p.out){const n=p.human&&has('nata')?S.g.handSize-1:S.g.handSize;for(let k=0;k<n;k++)p.hand.push(S.deck.pop())}}
+  S.last=[S.deck.pop()]; S.lastType='single'; S.lastBy=-1;
+  S.turn=S.players[S.starter].out?nextActive(S.starter):S.starter;
+  S.phase='play'; S.sel=new Set(); S.fresh=null; S.result=null; S.stamping=false; S.choice=null;
+  addLog(S.turn===0?'You start.':`${S.players[S.turn].name} starts.`);
+  render(); maybeBot();
+}
+function maybeBot(){if(S.screen==='table'&&S.phase==='play'&&!S.choice&&!S.players[S.turn].human)schedule(botTurn,1050)}
+const pickpocketReady=()=>S.turn===0&&has('pick')&&!S.used.pick&&S.lastType==='run'&&S.last.length>2;
+function pickable(){const L=S.last;if(S.lastType==='run'&&!pickpocketReady())return [0,L.length-1];return L.map((_,i)=>i)}
+function drawCard(){if(!S.deck.length){S.deck=shuffle(S.buried);S.buried=[];addLog('Deck reshuffled.')}return S.deck.pop()}
+function applyMove(pi,ids,take){
+  const p=S.players[pi], idset=new Set(ids);
+  const v=validate(p.hand.filter(c=>idset.has(c.id))); if(!v) return;
+  p.hand=p.hand.filter(c=>!idset.has(c.id));
+  const prev=S.last; let got;
+  if(p.human&&take>0&&take<prev.length-1&&S.lastType==='run'){S.used.pick=true;toast('Pickpocket used.')}
+  if(take>=0){got=prev[take];S.buried.push(...prev.filter((_,i)=>i!==take))}
+  else{
+    S.buried.push(...prev);
+    if(p.human&&has('tram')&&!S.used.tram){
+      const two=[drawCard(),drawCard()].filter(Boolean);
+      S.last=v.cards; S.lastType=v.type; S.lastBy=pi; S.used.tram=true;
+      addLog(`You dropped ${describe(v)} and rode Tram 28.`);SFX.drop();setTimeout(SFX.bell,150);
+      S.sel=new Set(); S.choice=two; render(); return;
+    }
+    got=drawCard();
+  }
+  if(got)p.hand.push(got);
+  S.last=v.cards; S.lastType=v.type; S.lastBy=pi;
+  if(p.human){SFX.drop();setTimeout(take>=0?SFX.take:SFX.draw,140)}else{SFX.drop(.5);if(take>=0)setTimeout(SFX.take,120)}
+  const src=take>=0?`took ${label(got)} from the pile`:(p.human&&got?`drew ${label(got)}`:'drew from the deck');
+  addLog(`${p.name} dropped ${describe(v)}, ${src}.`);
+  if(p.human){S.sel=new Set();S.fresh=got?got.id:null}
+  else{S.fresh=null;if(take>=0&&val(got)<=3&&Math.random()<.5)say(p,'take')}
+  S.turn=nextActive(pi);
+  if(S.turn===0&&S.players[0].hand.length)setTimeout(()=>{if(myTurn())SFX.turn(total(S.players[0].hand)<=myYanivAt())},350);
+  render(); maybeBot();
+}
+function chooseTram(i){
+  const keep=S.choice[i], other=S.choice[1-i];
+  S.players[0].hand.push(keep); if(other)S.buried.push(other);
+  S.fresh=keep.id; S.choice=null; addLog(`You kept ${label(keep)}.`); SFX.draw();
+  S.turn=nextActive(0); render(); maybeBot();
+}
+function callYaniv(pi){
+  clearTimeout(timer);
+  const caller=S.players[pi], t=total(caller.hand);
+  const others=active().filter(p=>p!==caller);
+  const asafers=others.filter(p=>total(p.hand)<=t).sort((a,b)=>total(a.hand)-total(b.hand));
+  const asaf=asafers.length>0;
+  if(!caller.human)say(caller,asaf?'burned':'yaniv');
+  if(asaf&&!asafers[0].human)say(asafers[0],'asaf');
+  const base={caller:caller.name,callerHuman:caller.human,t,asaf,asafer:asaf?asafers[0].name:'',asaferT:asaf?total(asafers[0].hand):0};
+  if(placementMode()){
+    const rest=others.filter(p=>!asafers.includes(p)).sort((a,b)=>total(a.hand)-total(b.hand));
+    const order=asaf?[...asafers,...rest,caller]:[caller,...rest];
+    const me=S.players[0], place=order.indexOf(me);
+    const rows=order.map((p,i)=>({name:p.name,human:p.human,hand:[...p.hand],ht:total(p.hand),place:i,caller:p===caller,asafer:asafers.includes(p)}));
+    S.result={...base,place,rows};
+    if(S.mode==='sprint'){
+      const c=COUNTRIES[S.cIdx];
+      const insured=me===caller&&asaf&&has('shield');
+      const pay=Math.round(c.reward*S.mult*(insured?PLACE_PCT[1]:PLACE_PCT[place]));
+      const bonus=asafers.includes(me)?Math.round(pay*.5):0;
+      Object.assign(S.result,{pay,bonus,insured}); addCoins(pay+bonus);
+    } else if(S.mode==='champion'){
+      if(place===0){
+        const ch=CHAMPS[S.cIdx];
+        if(!E.stamps.includes(ch.city))E.stamps.push(ch.city);
+        if(COUNTRIES[E.country+1]&&E.country===S.cIdx)E.country++;
+        E.tickets=Math.max(E.tickets,TICKET_CAP); addCoins(ch.prize);
+        S.result.won=true;
+      }
+    } else if(S.mode==='duel'){
+      if(place===0){S.result.won=true;addCoins(Math.round(S.stake*1.9))}
+    }
+    S.phase='matchEnd';
+  } else {
+    const rows=active().map(p=>{
+      const ht=total(p.hand), isAsafer=asafers.includes(p);
+      const add=p===caller?(asaf?ht+S.g.asafPenalty:0):(isAsafer?0:ht);
+      p.score+=add; let lucky=false, out=false;
+      if(S.g.lucky&&add>0&&p.score%50===0){p.score-=50;lucky=true}
+      if(p.score>S.g.endScore){p.out=true;out=true}
+      return {name:p.name,human:p.human,hand:[...p.hand],ht,add,score:p.score,lucky,out,caller:p===caller,asafer:isAsafer};
+    });
+    S.result={...base,rows};
+    S.starter=asaf?S.players.indexOf(asafers[0]):pi;
+    S.phase=(S.players[0].out||active().length<=1)?'gameOver':'roundEnd';
+  }
+  S.stamping=true; render();
+  showStamp('Yaniv!',false); SFX.yaniv();
+  setTimeout(()=>{
+    if(asaf){showStamp('Asaf!',true);SFX.asaf()}
+    setTimeout(()=>{$('stamp').hidden=true;S.stamping=false;render();resultSound()},asaf?1200:600);
+  },900);
+}
+function showStamp(text,asaf){const st=$('stamp');st.hidden=false;st.classList.toggle('asaf',asaf);const t=$('stamp-t');t.textContent=text;t.style.animation='none';void t.offsetWidth;t.style.animation=''}
+function shouldCall(p,t){
+  const minCards=Math.min(...active().filter(o=>o!==p).map(o=>o.hand.length));
+  const style=p.bot.style;
+  if(style==='bold') return true;
+  if(style==='calc') return t<=Math.max(1,minCards*2.2);
+  return t<=3||minCards>=4;
+}
+function botTurn(){
+  if(S.phase!=='play'||S.screen!=='table'||S.choice)return;
+  const pi=S.turn,p=S.players[pi]; if(p.human)return;
+  const t=total(p.hand);
+  if(t<=S.g.yanivAt&&shouldCall(p,t))return callYaniv(pi);
+  const w=p.bot.w, L=S.last, picks=S.lastType==='run'?[0,L.length-1]:L.map((_,i)=>i); let best=null;
+  for(const o of allSets(p.hand)){
+    const ids=new Set(o.ids), rest=p.hand.filter(c=>!ids.has(c.id));
+    const consider=(take,H,base)=>{const c=base-w*bestDump(H)+Math.random()*.6-o.pts*.01;if(!best||c<best.c)best={c,ids:o.ids,take}};
+    consider(-1,rest,total(rest)+6.3);
+    for(const i of picks){const H=[...rest,L[i]];consider(i,H,total(H))}
+  }
+  applyMove(pi,best.ids,best.take);
+}
+function say(p,kind){
+  const lines=p.bot?.q?.[kind]; if(!lines)return;
+  p.said=pickOne(lines);
+  clearTimeout(bubbleTimers.get(p.name));
+  bubbleTimers.set(p.name,setTimeout(()=>{p.said='';if(S.screen==='table')renderOpps()},2800));
+}
+
+/* ================= deck & market ================= */
+function buyPerk(k){
+  const pk=PERKS[k]; if(E.owned.includes(k))return;
+  if(E.coins<pk.price){SFX.nope();toast(`You need ${fmt(pk.price-E.coins)} more coins.`);return}
+  E.coins-=pk.price; E.owned.push(k);
+  if(E.equipped.length<SLOTS)E.equipped.push(k);
+  saveEcon(); bump('r-coin'); SFX.buy(); toast(`${pk.name} is yours${E.equipped.includes(k)?' and in your deck':''}.`); render();
+}
+function toggleEquip(k){
+  SFX.click();
+  if(E.equipped.includes(k))E.equipped=E.equipped.filter(x=>x!==k);
+  else{if(E.equipped.length>=SLOTS){toast(`Your deck holds ${SLOTS} cards. Remove one first.`);return}E.equipped.push(k)}
+  saveEcon(); render();
+}
+function perkChips(list,empty){return list.length?list.map(k=>`<span class="pchip">${perkArt(k)}${PERKS[k].name}</span>`).join(''):`<span class="pchip empty">${empty}</span>`}
+
+/* ================= screens ================= */
+function renderPlay(){
+  const ci=E.country, c=C(), m=E.mult, ch=CHAMPS[ci];
+  const adsLeft=E.adsDay===today()?ADS_PER_DAY-E.ads:ADS_PER_DAY;
+  const dailyReady=E.dailyDay!==today();
+  const segBtn=k=>`<button type="button" data-act="mult" data-m="${k}" aria-pressed="${m===k}">${k} <span class="ic-ticket"></span></button>`;
+  $('scr-play').innerHTML=`<div class="pad">
+    <div class="hero">${sceneSVG(ci,FULL,{id:'thumb'})}
+      <div class="cap"><div><small>Stop ${ci+1} of 12 · ${c.country}</small><b>${c.city}</b></div><span class="go">${c.ruleText}</span></div>
+    </div>
+    <ol class="steps"><li><i>1</i>Play a round</li><li><i>2</i>Win coins</li><li><i>3</i>Buy power cards</li></ol>
+    <div class="bet"><label>Bet</label><div class="seg" role="group" aria-label="Tickets to bet">${segBtn(1)}${segBtn(2)}${segBtn(3)}</div></div>
+    <button class="cta" type="button" data-act="sprint" ${E.tickets>=m?'':'disabled'}>Play<small>Win up to ${fmt(c.reward*m)} coins</small></button>
+    <div class="mydeck"><span class="lbl2">Your power cards</span>${perkChips(E.equipped,'None yet. Get them in the Deck tab.')}</div>
+    <div class="note" id="tix-note"></div>
+    <div class="free">
+      <button type="button" data-act="daily" ${dailyReady?'':'disabled'}>${dailyReady?'Daily gift':'Gift claimed'}<small>+5 tickets, +${fmt(c.reward/2)} coins</small></button>
+      <button type="button" data-act="ad" ${adsLeft>0?'':'disabled'}>Free tickets<small>Watch an ad · ${adsLeft} left</small></button>
+    </div>
+  </div>`;
+  renderTicketNote();
+}
+function renderDeck(){
+  const ci=E.country, c=C(), ch=CHAMPS[ci];
+  const slots=[0,1,2].map(i=>{const k=E.equipped[i];return k?`<button class="slot-c on" type="button" data-act="equip" data-k="${k}" aria-label="Remove ${PERKS[k].name} from your deck">${perkArt(k)}<b>${PERKS[k].name}</b><small>Tap to remove</small></button>`:`<div class="slot-c"><span>+</span><small>Empty slot</small></div>`}).join('');
+  const market=PERK_ORDER.map(k=>{
+    const pk=PERKS[k], own=E.owned.includes(k), eq=E.equipped.includes(k);
+    const btn=!own?`<button class="pbtn buy" type="button" data-act="buy" data-k="${k}" ${E.coins>=pk.price?'':'disabled'}><span class="ic-coin"></span>${fmt(pk.price)}</button>`
+      :`<button class="pbtn ${eq?'eq':''}" type="button" data-act="equip" data-k="${k}">${eq?'In deck ✓':'Add to deck'}</button>`;
+    return `<div class="perk ${own?'own':''}"><div class="perk-art">${perkArt(k)}</div><div class="perk-txt"><b>${pk.name}</b><p>${pk.text}</p></div>${btn}</div>`;
+  }).join('');
+  const stamps=ROUTE.map((city,i)=>`<span class="stamp-s ${E.stamps.includes(city)?'got':(i===ci?'here':'')}">${city}${E.stamps.includes(city)?' ✓':''}</span>`).join('');
+  $('scr-deck').innerHTML=`<div class="pad">
+    <div class="hero small">${sceneSVG(ci,FULL,{id:'deckhero'})}<div class="cap"><div><small>${c.city} market</small><b>Power cards</b></div></div></div>
+    <section><h3 class="sec">Your deck · ${E.equipped.length} of ${SLOTS}</h3><div class="slots">${slots}</div>
+      <p class="hint2">Power cards work in rounds and champion matches. Friends tables and duels stay classic.</p></section>
+    <section><h3 class="sec">For sale in ${c.city}</h3><div class="market">${market}</div>
+      ${ci>0?`<p class="hint2">New ${c.city} cards are coming in the next version. Your Lisbon cards still work here.</p>`:''}</section>
+    <section class="champ" style="--av:${ch.color}">
+      <div class="champ-top"><div class="av big">${ch.name[0]}</div><div><small>City champion</small><b>${ch.name}</b></div></div>
+      <p>Finish 1st at ${ch.short}'s table to earn your ${c.city} stamp${COUNTRIES[ci+1]?` and travel to ${COUNTRIES[ci+1].city}`:''}. Prize: ${fmt(ch.prize)} coins.</p>
+      <button class="btn primary wide" type="button" data-act="champion" ${E.coins>=ch.fee?'':'disabled'}>${E.stamps.includes(c.city)?'Play again':'Challenge'} · ${fmt(ch.fee)} coins</button>
+      <div class="stamps">${stamps}</div>
+    </section>
+  </div>`;
+}
+function renderFriends(){
+  const R=S.rules, st=E.stake;
+  const rivals=BOTS.map((b,i)=>`<button type="button" class="rival ${E.rival===i?'on':''}" data-act="rival" data-i="${i}" style="--av:${b.color}"><span class="av">${b.name[0]}</span>${b.name}</button>`).join('');
+  const stakeBtn=v=>`<button type="button" data-act="stake" data-v="${v}" aria-pressed="${st===v}" ${E.coins>=v?'':'disabled'}><span class="ic-coin"></span>${v>=1000?v/1000+'k':v}</button>`;
+  $('scr-friends').innerHTML=`<div class="pad">
+    <div class="card-panel"><h2>Duel</h2><p>One against one for coins. Winner takes the pot, minus 5%. No tickets needed.</p>
+      <div class="rivals">${rivals}</div>
+      <div class="bet" style="margin:12px 0"><label>Stake</label><div class="seg">${stakeBtn(1000)}${stakeBtn(5000)}${stakeBtn(25000)}</div></div>
+      <button class="btn primary wide" type="button" data-act="duel" ${E.coins>=st?'':'disabled'}>Challenge ${BOTS[E.rival].name} · win ${fmt(st*1.9)}</button>
+      <p class="hint2">In the full game you'll challenge real friends. Here your rivals are bots.</p></div>
+    <div class="card-panel"><h2 style="font-size:19px">Pairs · 2 vs 2<span class="soon">Soon</span></h2><p>Team up with a friend. When one of you calls Yaniv, your hands count together, and your partner can save you from an Asaf.</p></div>
+    <div class="card-panel"><h2 style="font-size:19px">Friends table</h2><p>A full game to ${R.endScore} with your house rules. Always free.</p>
+      <button class="btn wide" type="button" data-act="classic">Start a table</button>
+      <details class="hr"><summary>House rules</summary>
+      <form class="form" id="house-form">
+        <div class="field"><label for="r-yaniv">Call Yaniv at</label><select id="r-yaniv"><option value="5">5 or less</option><option value="7">7 or less</option><option value="10">10 or less</option></select></div>
+        <div class="field"><label for="r-asaf">Asaf penalty</label><select id="r-asaf"><option value="20">20</option><option value="25">25</option><option value="30">30</option></select></div>
+        <div class="field"><label for="r-end">Out above</label><select id="r-end"><option value="100">100</option><option value="150">150</option><option value="200">200</option></select></div>
+        <div class="field"><label for="r-lucky">Lucky landing<small>Exactly 50, 100… drops 50</small></label><input type="checkbox" id="r-lucky"></div>
+        <div class="field"><label for="r-hand">Cards dealt</label><select id="r-hand"><option value="5">5</option><option value="7">7</option></select></div>
+        <div class="field"><label for="r-bots">Players</label><select id="r-bots"><option value="1">2</option><option value="2">3</option><option value="3">4</option></select></div>
+      </form></details></div>
+  </div>`;
+  $('r-yaniv').value=R.yanivAt;$('r-asaf').value=R.asafPenalty;$('r-end').value=R.endScore;$('r-lucky').checked=R.lucky;$('r-hand').value=R.handSize;$('r-bots').value=R.bots;
+  $('house-form').addEventListener('change',()=>{
+    S.rules={yanivAt:+$('r-yaniv').value,asafPenalty:+$('r-asaf').value,endScore:+$('r-end').value,lucky:$('r-lucky').checked,handSize:+$('r-hand').value,bots:+$('r-bots').value};
+    saveRules(S.rules); toast('House rules saved.');
+  });
+}
+function renderTicketNote(){
+  const n=$('tix-note'); if(!n)return;
+  n.innerHTML=E.tickets>=TICKET_CAP?`Tickets full · <b>${E.tickets}</b> ready`:`Next free ticket in <b>${nextTicketIn()}</b>`;
+}
+function renderEcon(){
+  $('r-tix-n').textContent=E.tickets;
+  $('r-tix-t').textContent=E.tickets>=TICKET_CAP?'':nextTicketIn();
+  $('r-coin-n').textContent=fmt(E.coins);
+  $('deck-dot').hidden=!canBuyAny()||S.screen==='deck';
+}
+
+/* ================= table ================= */
+function cardHTML(c,{tag='div',cls='',attrs=''}={}){
+  const t=tag==='button'?'button type="button"':tag;
+  const aria=`aria-label="${label(c)}"`;
+  if(c.r===0) return `<${t} class="card joker ${cls}" ${aria} ${attrs}><span class="idx">★</span><span class="pip">★</span><span class="jk">JOKER</span></${tag}>`;
+  const ix=`${rankLabel(c.r)}<i>${SUITS[c.s]}</i>`;
+  return `<${t} class="card ${RED.has(c.s)?'red':''} ${cls}" ${aria} ${attrs}><span class="idx">${ix}</span><span class="pip">${SUITS[c.s]}</span><span class="idx br">${ix}</span></${tag}>`;
+}
+function sortHand(h){const bySuit=S.sortBy==='suit';return [...h].sort((a,b)=>bySuit?(SUIT_ORDER[a.s]-SUIT_ORDER[b.s])||(a.r-b.r):(a.r-b.r)||(SUIT_ORDER[a.s]-SUIT_ORDER[b.s]))}
+const myTurn=()=>S.phase==='play'&&S.turn===0&&!S.choice;
+function selection(){const me=S.players[0];const cards=me.hand.filter(c=>S.sel.has(c.id));return {cards,v:validate(cards)}}
+function renderOpps(){
+  $('opps').innerHTML=S.players.filter(p=>!p.human).map(p=>{
+    const i=S.players.indexOf(p), on=S.phase==='play'&&S.turn===i;
+    const backs=p.out?'':p.hand.map(()=>'<span class="bk"></span>').join('');
+    return `<div class="opp ${on?'active':''} ${p.out?'out':''}" style="--av:${p.color}">
+      <div class="av">${p.name[0]}</div>
+      <div class="who"><b>${p.name}</b><div class="thinking">${on?'thinking…':(p.out?'out':'')}</div></div>
+      <div class="meta"><span class="pts">${S.mode==='classic'?p.score:''}</span><span class="backs" aria-label="${p.hand.length} cards">${backs}</span></div>
+      ${p.said?`<div class="bubble">${p.said}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function tableTitle(){
+  const me=S.players[0], c=COUNTRIES[S.cIdx||0];
+  const perks=S.perks.length?` · ${S.perks.map(k=>PERKS[k].name+((k==='tram'||k==='pick')&&S.used[k]?' (used)':'')).join(', ')}`:'';
+  if(S.mode==='sprint')return `${c.city} · bet ${S.mult}<small>1st wins ${fmt(c.reward*S.mult)}${perks}</small>`;
+  if(S.mode==='champion')return `Champion of ${c.city}<small>Finish 1st to earn your stamp${perks}</small>`;
+  if(S.mode==='duel')return `Duel vs ${S.players[1].name}<small>Pot ${fmt(S.stake*2)} coins · winner takes ${fmt(S.stake*1.9)}</small>`;
+  return `Friends table<small>You have ${me.score} · out above ${S.g.endScore}</small>`;
+}
+function renderTable(){
+  const me=S.players[0], turn=myTurn(), {cards,v}=selection(), canDraw=turn&&!!v;
+  $('tbar-ttl').innerHTML=tableTitle();
+  renderOpps();
+  const deck=$('deck'), peek=has('light')&&S.deck.length?S.deck.at(-1):null;
+  deck.innerHTML=(peek?cardHTML(peek)+'<span class="peek">Next</span>':`<div class="card back"></div>`)+`<span class="count">${S.deck.length}</span>`;
+  deck.classList.toggle('go',canDraw); deck.disabled=!canDraw;
+  const picks=new Set(pickable());
+  $('pile').innerHTML=S.last.map((c,i)=>{
+    const can=picks.has(i), cls=turn?(can?(canDraw?'pick':'hint'):'dim'):'';
+    return cardHTML(c,{tag:'button',cls,attrs:`data-act="pile" data-i="${i}" ${canDraw&&can?'':'disabled'}`});
+  }).join('');
+  $('pile-lbl').innerHTML=S.lastBy<0?'Starting card':`<b>${S.players[S.lastBy].name}</b> dropped`;
+  $('log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
+  const t=total(me.hand), ya=myYanivAt(), canCall=turn&&t<=ya;
+  const tc=$('total'); tc.textContent=`Your hand: ${t}`; tc.classList.toggle('ok',t<=ya);
+  $('sortbtn').textContent=S.sortBy==='suit'?'Sort: suit':'Sort: rank';
+  const yb=$('yaniv'); yb.disabled=!canCall; yb.classList.toggle('ready',canCall&&!S.sel.size);
+  let msg;
+  if(S.phase!=='play') msg='';
+  else if(S.choice) msg='<b>Tram 28:</b> keep one of these two cards.';
+  else if(!turn) msg=`${S.players[S.turn].name} is playing…`;
+  else if(!cards.length) msg=canCall?`<b>Your hand is ${t}. Call Yaniv!</b> Or keep going to get lower.`:`<b>Your turn.</b> Tap cards to drop. Get your hand to ${ya} or less, then call Yaniv.`;
+  else if(!v) msg=`<span class="warn">Can't drop those together.</span> One card, same numbers, or 3+ in a row of one suit.`;
+  else msg=`Dropping ${describe(v)}. <b>Now tap the deck or a glowing card</b> to draw.${pickpocketReady()?' Pickpocket lets you take any card from this run.':''}`;
+  $('status').innerHTML=msg;
+  const hand=sortHand(me.hand), h=$('hand');
+  h.style.setProperty('--n',Math.max(hand.length,5));
+  h.innerHTML=hand.map(c=>cardHTML(c,{tag:'button',cls:(S.sel.has(c.id)?'sel ':'')+(S.fresh===c.id?'fresh':''),attrs:`data-act="card" data-id="${c.id}" aria-pressed="${S.sel.has(c.id)}" ${S.phase==='play'?'':'disabled'}`})).join('');
+  const ch=$('choice'); ch.hidden=!S.choice;
+  if(S.choice)ch.innerHTML=`<div class="choice-box"><b>Tram 28 · keep one</b><div class="choice-cards">${S.choice.map((c,i)=>cardHTML(c,{tag:'button',attrs:`data-act="choose" data-i="${i}"`})).join('')}</div></div>`;
+  const showRound=['roundEnd','gameOver','matchEnd'].includes(S.phase)&&!S.stamping;
+  $('ov-round').hidden=!showRound;
+  if(showRound) S.phase==='matchEnd'?renderMatchResult():renderResult();
+}
+function headline(r){
+  const callerName=r.callerHuman?'You':r.caller;
+  return r.asaf?`${callerName} called Yaniv with ${r.t}, but ${r.asafer==='You'?'you':r.asafer} had ${r.asaferT}.`:`${callerName} called Yaniv with ${r.t} and nobody matched it.`;
+}
+function renderMatchResult(){
+  const r=S.result, c=COUNTRIES[S.cIdx], m=S.mult;
+  const prizeFor=place=>S.mode==='sprint'?fmt(c.reward*m*PLACE_PCT[place]):(S.mode==='duel'?(place===0?fmt(S.stake*1.9):'0'):(place===0?fmt(CHAMPS[S.cIdx].prize):'0'));
+  const rows=r.rows.map(x=>`<div class="rrow ${x.human?'me':''}">
+      <div class="nm"><span class="rank">${x.place+1}</span>${x.name}${x.caller?'<span class="pill call">called</span>':''}${x.asafer?'<span class="pill lucky">asaf</span>':''}<small>hand ${x.ht}</small></div>
+      <span></span><span class="sc">${prizeFor(x.place)}</span>
+      <div class="mini">${x.hand.map(cd=>cardHTML(cd)).join('')}</div>
+    </div>`).join('');
+  let box, foot;
+  if(S.mode==='sprint'){
+    box=`<div class="prize"><span class="place">${['1st','2nd','3rd','4th'][r.place]} place</span><span class="amt"><span class="ic-coin"></span>+${fmt(r.pay+r.bonus)}</span>
+      <small>${r.insured?'Asaf insurance paid you the 2nd-place prize. ':''}${r.bonus?`Includes a ${fmt(r.bonus)} Asaf bonus. `:''}${canBuyAny()?'You can buy a new power card now.':''}</small></div>`;
+    foot=`<button class="btn" type="button" data-act="tab" data-tab="${canBuyAny()?'deck':'play'}">${canBuyAny()?'Visit the market':'Back'}</button><button class="btn primary" type="button" data-act="sprint" ${E.tickets>=m?'':'disabled'}>${E.tickets>=m?'Play again':'Out of tickets'}</button>`;
+  } else if(S.mode==='champion'){
+    const ch=CHAMPS[S.cIdx], next=COUNTRIES[S.cIdx+1];
+    box=r.won?`<div class="prize"><span class="place">${c.city} stamp</span><span class="amt"><span class="ic-coin"></span>+${fmt(ch.prize)}</span><small>${next?`You beat ${ch.name}. Next stop: ${next.city}, where Yaniv is called at ${next.yanivAt} or less.`:`You beat ${ch.name}. That's the end of this prototype's route.`}</small></div>`
+      :`<div class="prize lost"><span class="place">${['1st','2nd','3rd','4th'][r.place]} place</span><small>${ch.name} keeps the title for now. Power up your deck and try again.</small></div>`;
+    foot=r.won?`<button class="btn primary" type="button" data-act="tab" data-tab="play">${next?`Travel to ${next.city}`:'Back'}</button>`
+      :`<button class="btn" type="button" data-act="tab" data-tab="deck">Back to the market</button><button class="btn primary" type="button" data-act="champion" ${E.coins>=ch.fee?'':'disabled'}>Try again · ${fmt(ch.fee)}</button>`;
+  } else {
+    const opp=S.players[1].name, rev=S.stake*2;
+    box=r.won?`<div class="prize"><span class="place">You win the duel</span><span class="amt"><span class="ic-coin"></span>+${fmt(S.stake*1.9)}</span><small>${opp} will want a rematch.</small></div>`
+      :`<div class="prize lost"><span class="place">${opp} wins</span><small>You lost your ${fmt(S.stake)} coin stake.</small></div>`;
+    foot=`<button class="btn" type="button" data-act="tab" data-tab="friends">Back</button>${r.won?`<button class="btn primary" type="button" data-act="duel">Rematch · ${fmt(S.stake)}</button>`:`<button class="btn primary" type="button" data-act="revenge" ${E.coins>=rev?'':'disabled'}>Revenge · ${fmt(rev)}</button>`}`;
+  }
+  $('round-sheet').innerHTML=`<h2 class="${r.asaf?'asaf':''}">${r.asaf?'Asaf!':'Yaniv!'}</h2><p>${headline(r)}</p>${box}<div class="rtable">${rows}</div><div class="foot">${foot}</div>`;
+}
+function ordinal(n){return n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th')}
+function renderResult(){
+  const r=S.result;
+  const line=headline(r)+(r.asaf?` ${r.callerHuman?'You take':r.caller+' takes'} the hand plus ${S.g.asafPenalty}.`:' Everyone else adds their hand.');
+  const rows=r.rows.map(x=>`<div class="rrow ${x.human?'me':''}">
+      <div class="nm">${x.name}${x.caller?'<span class="pill call">called</span>':''}${x.asafer?'<span class="pill lucky">asaf</span>':''}${x.lucky?'<span class="pill lucky">−50</span>':''}${x.out?'<span class="pill out">out</span>':''}<small>hand ${x.ht}</small></div>
+      <span class="add ${x.add===0?'zero':(x.caller?'hit':'')}">+${x.add}</span><span class="sc">${x.score}</span>
+      <div class="mini">${x.hand.map(c=>cardHTML(c)).join('')}</div></div>`).join('');
+  let foot;
+  if(S.phase==='gameOver'){
+    const me=S.players[0], standings=[...S.players].sort((a,b)=>(a.out-b.out)||(a.score-b.score)), place=standings.indexOf(me)+1;
+    foot=`<p style="margin-top:12px"><b>${me.out?`You went over ${S.g.endScore}. You finished ${ordinal(place)} of ${S.players.length}.`:`You're the last one at the table.`}</b></p><div class="foot"><button class="btn" type="button" data-act="leave">Leave</button><button class="btn primary" type="button" data-act="classic">Play again</button></div>`;
+  } else foot=`<div class="foot"><button class="btn" type="button" data-act="leave">Leave</button><button class="btn primary" type="button" data-act="next">Next round</button></div>`;
+  $('round-sheet').innerHTML=`<h2 class="${r.asaf?'asaf':''}">${r.asaf?'Asaf!':'Yaniv!'}</h2><p>${line}</p><div class="rtable">${rows}</div>${foot}`;
+}
+
+/* ================= info sheets ================= */
+function openRules(){
+  const y=S.screen==='table'?S.g.yanivAt:C().yanivAt;
+  $('info-sheet').innerHTML=`<h2>How to play</h2>
+  <ol class="howto">
+    <li><b>Lowest hand wins.</b> A = 1, 2–10 = their number, J Q K = 10, Joker = 0.</li>
+    <li><b>Drop</b> one card, same numbers (7-7), or 3+ in a row of one suit (4-5-6♥).</li>
+    <li><b>Draw</b> one card: from the deck, or the card the last player dropped.</li>
+    <li><b>Hand ${y} or less?</b> Call Yaniv at the start of your turn.</li>
+    <li><b>Asaf:</b> if someone has the same or less, they caught you and win.</li>
+    <li><b>Power cards</b> bend the rules in your favour. Buy them with coins and pick 3 for your deck.</li>
+  </ol>
+  <div class="foot"><button class="btn primary" type="button" data-act="close">Got it</button></div>`;
+  $('ov-info').hidden=false;
+}
+function openSettings(){
+  resetArmed=false;
+  $('info-sheet').innerHTML=`<h2>Settings</h2>
+    <div class="form">
+      <div class="field"><label for="s-sfx">Sound effects<small>Cards, coins, Yaniv and Asaf</small></label><input type="checkbox" id="s-sfx"></div>
+      <div class="field"><label for="s-music">Music<small>A chill lounge beat, different in each city</small></label><input type="checkbox" id="s-music"></div>
+      <div class="field"><label>How to play<small>The rules in six lines</small></label><button class="btn" type="button" data-act="rules">Open</button></div>
+      <div class="field"><label>Reset progress<small>Prototype only: coins, tickets and cards</small></label><button class="btn" type="button" data-act="reset">Reset</button></div>
+    </div>
+    <div class="foot"><button class="btn primary" type="button" data-act="close">Done</button></div>`;
+  $('ov-info').hidden=false;
+  const p=AUD.prefs(); $('s-sfx').checked=p.sfx; $('s-music').checked=p.music;
+  $('s-sfx').onchange=e=>{AUD.set('sfx',e.target.checked);renderMute();SFX.click()};
+  $('s-music').onchange=e=>{AUD.set('music',e.target.checked);renderMute()};
+}
+
+/* ================= render ================= */
+function render(){
+  const scr=S.screen, playing=scr==='table';
+  $('phone').classList.toggle('playing',playing);
+  for(const k of ['play','deck','friends','table'])$('scr-'+k).hidden=k!==scr;
+  for(const k of ['play','deck','friends'])$('nav-'+k).setAttribute('aria-current',k===scr?'page':'false');
+  renderEcon(); renderMute();
+  if(scr==='play')renderPlay();
+  else if(scr==='deck')renderDeck();
+  else if(scr==='friends')renderFriends();
+  else renderTable();
+  if(!playing)$('ov-round').hidden=true;
+}
+function goTab(t){SFX.click();clearTimeout(timer);S.screen=t;S.phase='idle';S.choice=null;$('ov-round').hidden=true;render();$('scr-'+t).scrollTop=0}
+
+/* ================= input ================= */
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]'); if(!el)return;
+  const act=el.dataset.act;
+  if(act==='close-bg'){if(e.target===el)el.hidden=true;return}
+  if(act==='card'){if(S.phase!=='play')return;const id=el.dataset.id;if(S.sel.has(id)){S.sel.delete(id);SFX.untap()}else{S.sel.add(id);SFX.tap()}S.fresh=null;render()}
+  else if(act==='deck'){const {v}=selection();if(myTurn()&&v)applyMove(0,[...S.sel],-1);else if(myTurn())SFX.nope()}
+  else if(act==='pile'){const {v}=selection();const i=+el.dataset.i;if(myTurn()&&v&&pickable().includes(i))applyMove(0,[...S.sel],i)}
+  else if(act==='choose'){if(S.choice)chooseTram(+el.dataset.i)}
+  else if(act==='yaniv'){if(myTurn()&&total(S.players[0].hand)<=myYanivAt()){S.sel=new Set();callYaniv(0)}}
+  else if(act==='sort'){S.sortBy=S.sortBy==='suit'?'rank':'suit';render()}
+  else if(act==='next'){S.round++;startRound()}
+  else if(act==='sprint'){$('ov-round').hidden=true;startSprint()}
+  else if(act==='champion'){$('ov-round').hidden=true;startChampion()}
+  else if(act==='duel'){$('ov-round').hidden=true;startDuel()}
+  else if(act==='revenge'){E.stake=S.stake*2;saveEcon();$('ov-round').hidden=true;startDuel()}
+  else if(act==='classic'){$('ov-round').hidden=true;startClassic()}
+  else if(act==='leave'){goTab(S.mode==='classic'||S.mode==='duel'?'friends':(S.mode==='champion'?'deck':'play'))}
+  else if(act==='tab'){goTab(el.dataset.tab)}
+  else if(act==='mult'){SFX.click();E.mult=+el.dataset.m;saveEcon();render()}
+  else if(act==='stake'){SFX.click();E.stake=+el.dataset.v;saveEcon();render()}
+  else if(act==='rival'){SFX.click();E.rival=+el.dataset.i;saveEcon();render()}
+  else if(act==='buy'){buyPerk(el.dataset.k)}
+  else if(act==='equip'){toggleEquip(el.dataset.k)}
+  else if(act==='daily'){if(E.dailyDay!==today()){E.dailyDay=today();E.tickets+=5;bump('r-tix');addCoins(C().reward/2);SFX.coins();toast(`+5 tickets and +${fmt(C().reward/2)} coins`);render()}}
+  else if(act==='ad'){if(E.adsDay!==today()){E.adsDay=today();E.ads=0}if(E.ads<ADS_PER_DAY){E.ads++;E.tickets+=2;saveEcon();bump('r-tix');SFX.coins();toast('+2 tickets (simulated ad)');render()}}
+  else if(act==='reset'){if(!resetArmed){resetArmed=true;el.textContent='Tap again';return}E=freshEcon();saveEcon();$('ov-info').hidden=true;goTab('play');toast('Progress reset.')}
+  else if(act==='rules'){openRules()}
+  else if(act==='settings'){openSettings()}
+  else if(act==='mute'){const p=AUD.prefs(),on=p.sfx||p.music;AUD.set('sfx',!on);AUD.set('music',!on);renderMute();if(!on)SFX.click()}
+  else if(act==='close'){el.closest('.ov').hidden=true}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('ov-info').hidden=true});
+setInterval(()=>{
+  if(regen()){bump('r-tix');if(S.screen==='play')renderPlay()}
+  renderEcon(); renderTicketNote();
+  const cta=document.querySelector('.cta'); if(cta)cta.disabled=E.tickets<E.mult;
+},1000);
+
+/* ================= boot (keeps the game across live updates) ================= */
+window.claude?.hot?.snapshot?.(()=>({S:{...S,sel:[...(S.sel||[])],stamping:false},uid}));
+function start(data){
+  E=loadEcon(); regen();
+  if(data&&data.S&&data.S.g&&data.S.v===4){
+    S={...data.S,sel:new Set(data.S.sel||[])};uid=data.uid||5000;
+    render();maybeBot();
+  } else {
+    S={v:4,rules:loadRules(),sortBy:'rank',log:[],screen:'play',phase:'idle',players:[],sel:new Set(),perks:[],used:{}};
+    render();
+  }
+}
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+
+</script>
