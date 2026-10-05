@@ -1,4 +1,4 @@
-<title>Yaniv Hostel</title>
+<title>Theo!</title>
 <meta name="theme-color" content="#0a2226">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -186,7 +186,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 .card .pip{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--w) * .46)}
 .card .jk{position:absolute;left:0;right:0;bottom:9%;text-align:center;font-family:var(--display);font-size:calc(var(--w) * .13)}
 .card.back{border:3px solid var(--card);background:repeating-linear-gradient(45deg,var(--accent) 0 6px,color-mix(in srgb,var(--accent) 78%,var(--rail)) 6px 12px)}
-.card.back::after{content:"Y";position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:calc(var(--w) * .42);color:var(--accent-ink)}
+.card.back::after{content:"T";position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:calc(var(--w) * .42);color:var(--accent-ink)}
 button.card{cursor:pointer}
 button.card:disabled{cursor:default}
 .pile .card.pick{box-shadow:0 0 0 3px var(--accent),0 0 22px color-mix(in srgb,var(--accent) 50%,transparent);z-index:1}
@@ -395,7 +395,7 @@ details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px
 
 <div class="phone" id="phone">
   <header class="appbar">
-    <div class="brand">Yaniv</div>
+    <div class="brand">Theo!</div>
     <div class="rchip" id="r-tix" title="Travel tickets"><span class="ic-ticket"></span><span id="r-tix-n"></span><small id="r-tix-t"></small></div>
     <div class="rchip" id="r-coin" title="Coins"><span class="ic-coin"></span><span id="r-coin-n"></span></div>
     <button class="iconbtn mutebtn" type="button" data-act="mute" aria-label="Mute sound"></button>
@@ -434,7 +434,7 @@ details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px
             <div class="status" id="status"></div>
             <span class="chip" id="total"></span>
             <button class="btn sortbtn" type="button" data-act="sort" id="sortbtn"></button>
-            <button class="yaniv" type="button" data-act="yaniv" id="yaniv">Yaniv!</button>
+            <button class="yaniv" type="button" data-act="yaniv" id="yaniv">Theo!</button>
           </div>
           <div class="hand" id="hand" aria-label="Your hand"></div>
         </section>
@@ -451,7 +451,7 @@ details.hr summary{cursor:pointer;font-weight:600;color:var(--muted);padding:6px
   <div class="ov" id="ov-round" hidden><div class="sheet" id="round-sheet" role="dialog" aria-modal="true"></div></div>
   <div class="ov" id="ov-info" hidden data-act="close-bg"><div class="sheet" id="info-sheet" role="dialog" aria-modal="true"></div></div>
   <div class="reveal" id="reveal" hidden></div>
-  <div class="stamp" id="stamp" hidden><span id="stamp-t">Yaniv!</span></div>
+  <div class="stamp" id="stamp" hidden><span id="stamp-t">Theo!</span></div>
   <div class="toast" id="toast" hidden></div>
 </div>
 
@@ -467,7 +467,7 @@ const COUNTRIES=[
    sites:['Tram 28','Corner café','Rooftop hostel','Fado bar','Lighthouse'],
    blurbs:['The yellow tram that climbs the hills.','Pastéis de nata and strong coffee.','Where the travelers sleep and the cards come out.','Sad songs, good wine, late nights.','Lights the way home across the Tagus.'],
    costs:[1000,2000,3000]},
-  {city:'Goa',country:'India',reward:5000,yanivAt:5,bonus:12000,ruleText:'House rule: Yaniv at 5 or less',
+  {city:'Goa',country:'India',reward:5000,yanivAt:5,bonus:12000,ruleText:'House rule: Theo at 5 or less',
    sites:['Beach shack','Spice market','Yoga deck','Scooter rental','Sunset temple'],
    blurbs:['Cold drinks with your feet in the sand.','Cardamom, chili and haggling.','Sunrise stretches before the first round.','Two wheels to every beach on the coast.','Bells at dusk over the water.'],
    costs:[4000,8500,12500]},
@@ -476,11 +476,11 @@ const ROUTE=['Lisbon','Goa','Cusco','Hanoi','Rio','Tokyo'];
 const PLOTS=[[118,548],[284,478],[196,372],[74,420],[312,300]]; // anchor (bottom centre) of each landmark in the 390x600 scene
 const BOTS=[
   {name:'Maya',city:'Tel Aviv',style:'bold',w:.4,color:'#f08a6c',
-   q:{yaniv:['Yaniv! Pay up.','Yaniv. Too slow, friends.'],burned:['No. No no no.','Okay, who taught you to count?'],asaf:['Asaf! Sit down.'],take:['Mine now.','Thanks, I needed that.']}},
+   q:{yaniv:['Theo! Pay up.','Theo. Too slow, friends.'],burned:['No. No no no.','Okay, who taught you to count?'],asaf:['Mateo! Sit down.'],take:['Mine now.','Thanks, I needed that.']}},
   {name:'Joaquín',city:'Buenos Aires',style:'calc',w:.75,color:'#7cc6e8',
-   q:{yaniv:['Yaniv. The math was clear.'],burned:['Statistically unlikely. Painful.'],asaf:['Asaf. I had a feeling.'],take:['A gift. Gracias.']}},
+   q:{yaniv:['Theo. The math was clear.'],burned:['Statistically unlikely. Painful.'],asaf:['Mateo. I had a feeling.'],take:['A gift. Gracias.']}},
   {name:'Ingrid',city:'Oslo',style:'patient',w:.6,color:'#b9a3f0',
-   q:{yaniv:['Yaniv. I waited for this.'],burned:['Hm. Next time.'],asaf:['Asaf. Patience pays.'],take:['I will keep that one.']}},
+   q:{yaniv:['Theo. I waited for this.'],burned:['Hm. Next time.'],asaf:['Mateo. Patience pays.'],take:['I will keep that one.']}},
 ];
 
 let uid=1, timer=null, S=null, E=null, toastT=null, resetArmed=false, popSite=-1;
@@ -802,8 +802,8 @@ function resultSound(){
 const PERKS={
   tram:{name:'Tram 28',price:2000,text:'The first time you draw from the deck, see 2 cards and keep 1.'},
   nata:{name:'Pastel de nata',price:3000,text:'You start every round with 4 cards instead of 5.'},
-  fado:{name:'Fado',price:2500,text:'You can call Yaniv with up to 2 points more than the city rule.'},
-  shield:{name:'Asaf insurance',price:1500,text:'Caught in an Asaf? You still get the 2nd-place prize.'},
+  fado:{name:'Fado',price:2500,text:'You can call Theo with up to 2 points more than the city rule.'},
+  shield:{name:'Mateo insurance',price:1500,text:'Got Mateo’d? You still get the 2nd-place prize.'},
   light:{name:'Lighthouse',price:4000,text:'You always see the top card of the deck.'},
   pick:{name:'Pickpocket',price:2000,text:'Once per round, take any card from a run, not just the ends.'},
 };
@@ -811,9 +811,9 @@ const PERK_ORDER=['shield','tram','pick','fado','nata','light'];
 const SLOTS=3;
 const CHAMPS=[
   {name:'Dona Amália',short:'Amália',city:'Lisbon',style:'calc',w:.9,color:'#e86f9a',fee:5000,prize:5000,
-   q:{yaniv:['Yaniv. Lisbon is mine, querido.'],burned:['Ai! Well played.'],asaf:['Asaf. You must be patient in Lisbon.'],take:['Obrigada.']}},
+   q:{yaniv:['Theo. Lisbon is mine, querido.'],burned:['Ai! Well played.'],asaf:['Mateo. You must be patient in Lisbon.'],take:['Obrigada.']}},
   {name:'Raj the Ace',short:'Raj',city:'Goa',style:'calc',w:.9,color:'#5fc4a8',fee:15000,prize:12000,
-   q:{yaniv:['Yaniv. The ocean told me.'],burned:['Hm. Respect.'],asaf:['Asaf! Not on my beach.'],take:['Thank you, friend.']}},
+   q:{yaniv:['Theo. The ocean told me.'],burned:['Hm. Respect.'],asaf:['Mateo! Not on my beach.'],take:['Thank you, friend.']}},
 ];
 function perkArt(id){
   const s={
@@ -1061,7 +1061,7 @@ function say(p,kind){
   bubbleTimers.set(p.name,setTimeout(()=>{p.said='';if(S.screen==='table')renderOpps()},2800));
 }
 
-/* ================= the reveal: Yaniv / Asaf moment ================= */
+/* ================= the reveal: Theo / Mateo moment ================= */
 let revealTimers=[];
 const rt=(fn,ms)=>revealTimers.push(setTimeout(fn,ms));
 const reducedMotion=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1089,7 +1089,7 @@ function runReveal(caller,t,others,asafers,done){
       <div class="rv-score"><div class="rv-num" id="rvn-${i}">?</div><div class="rv-tag" id="rvt-${i}"></div></div>
     </div>`;
   ov.innerHTML=`<div class="rv-box">
-      <div class="rv-call"><span class="rv-stamp">Yaniv!</span>
+      <div class="rv-call"><span class="rv-stamp">Theo!</span>
         <div class="rv-caller" style="--av:${caller.color}"><div class="av">${caller.name[0]}</div><span><b>${nm(caller)}</b> called at <b class="rv-t">${t}</b></span></div>
         <div class="rv-cards caller">${caller.hand.map(c=>cardHTML(c)).join('')}</div>
       </div>
@@ -1110,7 +1110,7 @@ function runReveal(caller,t,others,asafers,done){
   const verdict=(p,i,silent)=>{
     const caught=total(p.hand)<=t, el=$('rv-'+i);
     el.classList.add(caught?'caught':'safe');
-    $('rvt-'+i).textContent=caught?'Asaf!':'safe';
+    $('rvt-'+i).textContent=caught?'Mateo!':'safe';
     if(!silent){if(caught){SFX.boom();shake()}else SFX.safe()}
   };
   order.forEach((p,i)=>{
@@ -1134,11 +1134,11 @@ function runReveal(caller,t,others,asafers,done){
     const asaf=asafers.length>0, f=$('rv-final'), me=S.players[0];
     if(asaf){
       const a=asafers[0], good=a===me;
-      f.innerHTML=`<div class="rv-big asaf ${good?'good':''}">ASAF!</div><p>${good?`You caught ${caller.name}!`:`${nm(a)} caught ${caller.human?'you':caller.name}.`}</p>${a.human?quip(caller,'burned'):quip(a,'asaf')}`;
+      f.innerHTML=`<div class="rv-big asaf ${good?'good':''}">MATEO!</div><p>${good?`You caught ${caller.name}!`:`${nm(a)} caught ${caller.human?'you':caller.name}.`}</p>${a.human?quip(caller,'burned'):quip(a,'asaf')}`;
       if(good){SFX.yaniv();confetti()}else SFX.asaf();
     } else {
       const good=caller===me;
-      f.innerHTML=`<div class="rv-big">YANIV!</div><p>${good?`Nobody beat your ${t}.`:`Nobody beat ${caller.name}'s ${t}.`}</p>${caller.human?'':quip(caller,'yaniv')}`;
+      f.innerHTML=`<div class="rv-big">THEO!</div><p>${good?`Nobody beat your ${t}.`:`Nobody beat ${caller.name}'s ${t}.`}</p>${caller.human?'':quip(caller,'yaniv')}`;
       SFX.yaniv(); if(good)confetti();
     }
     ov.classList.add('done');
@@ -1156,7 +1156,7 @@ function runReveal(caller,t,others,asafers,done){
 
 /* ================= first-game lesson with Nico ================= */
 const NICO={name:'Nico',city:'Hostel owner',color:'#9fd36b',style:'calc',w:.5,
-  q:{burned:['Ha! You learn fast.'],asaf:['Asaf!'],yaniv:['Yaniv!'],take:['Thanks!']}};
+  q:{burned:['Ha! You learn fast.'],asaf:['Mateo!'],yaniv:['Theo!'],take:['Thanks!']}};
 const NICO_MOVES=['nJd','n7s','nQc'];
 const TUT=[
   {need:'next',  text:'Lowest hand wins. Yours adds up to <b>32</b>. Kings count 10, Aces count 1.'},
@@ -1166,7 +1166,7 @@ const TUT=[
   {need:'deck',  text:'This time draw from the <b>deck</b>. You never know what’s coming.'},
   {need:'select',ids:['t2h','p3h','d4h'], text:'<b>2♥ 3♥ 4♥</b> is a run: 3 or more in a row, same suit. Drop all three.'},
   {need:'deck',  text:'Nico dropped a 7. Too high to take. Draw from the <b>deck</b>.'},
-  {need:'yaniv', text:'Your hand is <b>1</b>. With 7 or less you can call Yaniv. <b>Call it!</b>'},
+  {need:'yaniv', text:'Your hand is <b>1</b>. With 7 or less you can call Theo. <b>Call it!</b>'},
 ];
 const tutStep=()=>S.mode==='tutorial'?TUT[S.tut.step]:null;
 function startTutorial(){
@@ -1204,7 +1204,7 @@ function renderTutorialEnd(){
   const r=S.result, nicoT=total(S.players[1].hand);
   $('round-sheet').innerHTML=`<h2>You won your first hand!</h2>
     <p>Nico had ${nicoT}. Nobody matched your ${r.t}, so you win.</p>
-    <div class="tut-note"><b>Watch out for Asaf.</b> If Nico had ${r.t} or less, he would have caught you, and you’d take the penalty instead.</div>
+    <div class="tut-note"><b>Watch out for Mateo.</b> If Nico had ${r.t} or less, he would have caught you, and you’d take the penalty instead.</div>
     <div class="gift"><div class="perk-art">${perkArt('tram')}</div><div><small>Welcome gift</small><b>Tram 28</b><p>${PERKS.tram.text}</p><span>Added to your deck</span></div></div>
     <div class="foot"><button class="btn primary wide" type="button" data-act="tutdone">Play in Lisbon</button></div>`;
 }
@@ -1213,10 +1213,10 @@ function openWelcome(){
   $('info-sheet').innerHTML=`<div class="welcome">
       <div class="av big" style="--av:${NICO.color}">N</div>
       <h2>Welcome to the hostel</h2>
-      <p>I’m Nico, I run the place. Every night the travelers here play <b>Yaniv</b>, the card game backpackers carry around the world.</p>
+      <p>I’m Nico, I run the place. Every night the travelers here play <b>Theo!</b>, the card game backpackers carry around the world.</p>
       <p>Let me teach you in one quick hand. It takes about a minute.</p>
       <div class="foot col"><button class="btn primary wide" type="button" data-act="tutstart">Teach me</button>
-      <button class="btn wide" type="button" data-act="tutskip">I know Yaniv, skip</button></div>
+      <button class="btn wide" type="button" data-act="tutskip">I know how to play, skip</button></div>
     </div>`;
   $('ov-info').hidden=false;
 }
@@ -1226,7 +1226,7 @@ const GAME_URL='https://yuvalbuk07-boop.github.io/yaniv-hostel/';
 const VERSION='v11';
 // Google Form wiring. Filled in from the form's pre-filled link; null = feedback hidden.
 const FORM=null;
-const SHARE_TEXT=`I'm testing Yaniv Hostel, the card game backpackers play around the world. Try it on your phone: ${GAME_URL}\n(iPhone: open in Safari, tap Share, then "Add to Home Screen")`;
+const SHARE_TEXT=`I'm testing Theo!, a card game backpackers play around the world. Lowest hand shouts Theo… unless someone shouts Mateo. Try it on your phone: ${GAME_URL}\n(iPhone: open in Safari, tap Share, then "Add to Home Screen")`;
 function trackDay(){
   E.stats=E.stats||{rounds:0,wins:0,caught:0,catches:0,duels:0,days:[]};
   if(!E.stats.days.includes(today())){E.stats.days.push(today());saveEcon()}
@@ -1250,7 +1250,7 @@ function gameData(){
 async function shareGame(){
   SFX.click();
   try{
-    if(navigator.share){await navigator.share({title:'Yaniv Hostel',text:SHARE_TEXT});return}
+    if(navigator.share){await navigator.share({title:'Theo!',text:SHARE_TEXT});return}
   }catch(e){if(e&&e.name==='AbortError')return}
   try{await navigator.clipboard.writeText(SHARE_TEXT);toast('Invite copied. Paste it in WhatsApp.')}
   catch(e){toast(GAME_URL)}
@@ -1374,13 +1374,13 @@ function renderFriends(){
       <div class="bet" style="margin:12px 0"><label>Stake</label><div class="seg">${stakeBtn(1000)}${stakeBtn(5000)}${stakeBtn(25000)}</div></div>
       <button class="btn primary wide" type="button" data-act="duel" ${E.coins>=st?'':'disabled'}>Challenge ${BOTS[E.rival].name} · win ${fmt(st*1.9)}</button>
       <p class="hint2">In the full game you'll challenge real friends. Here your rivals are bots.</p></div>
-    <div class="card-panel"><h2 style="font-size:19px">Pairs · 2 vs 2<span class="soon">Soon</span></h2><p>Team up with a friend. When one of you calls Yaniv, your hands count together, and your partner can save you from an Asaf.</p></div>
+    <div class="card-panel"><h2 style="font-size:19px">Pairs · 2 vs 2<span class="soon">Soon</span></h2><p>Team up with a friend. When one of you calls Theo, your hands count together, and your partner can save you from a Mateo.</p></div>
     <div class="card-panel"><h2 style="font-size:19px">Friends table</h2><p>A full game to ${R.endScore} with your house rules. Always free.</p>
       <button class="btn wide" type="button" data-act="classic">Start a table</button>
       <details class="hr"><summary>House rules</summary>
       <form class="form" id="house-form">
-        <div class="field"><label for="r-yaniv">Call Yaniv at</label><select id="r-yaniv"><option value="5">5 or less</option><option value="7">7 or less</option><option value="10">10 or less</option></select></div>
-        <div class="field"><label for="r-asaf">Asaf penalty</label><select id="r-asaf"><option value="20">20</option><option value="25">25</option><option value="30">30</option></select></div>
+        <div class="field"><label for="r-yaniv">Call Theo at</label><select id="r-yaniv"><option value="5">5 or less</option><option value="7">7 or less</option><option value="10">10 or less</option></select></div>
+        <div class="field"><label for="r-asaf">Mateo penalty</label><select id="r-asaf"><option value="20">20</option><option value="25">25</option><option value="30">30</option></select></div>
         <div class="field"><label for="r-end">Out above</label><select id="r-end"><option value="100">100</option><option value="150">150</option><option value="200">200</option></select></div>
         <div class="field"><label for="r-lucky">Lucky landing<small>Exactly 50, 100… drops 50</small></label><input type="checkbox" id="r-lucky"></div>
         <div class="field"><label for="r-hand">Cards dealt</label><select id="r-hand"><option value="5">5</option><option value="7">7</option></select></div>
@@ -1462,7 +1462,7 @@ function renderTable(){
   else if(S.phase!=='play') msg='';
   else if(S.choice) msg='<b>Tram 28:</b> keep one of these two cards.';
   else if(!turn) msg=`${S.players[S.turn].name} is playing…`;
-  else if(!cards.length) msg=canCall?`<b>Your hand is ${t}. Call Yaniv!</b> Or keep going to get lower.`:`<b>Your turn.</b> Tap cards to drop. Get your hand to ${ya} or less, then call Yaniv.`;
+  else if(!cards.length) msg=canCall?`<b>Your hand is ${t}. Call Theo!</b> Or keep going to get lower.`:`<b>Your turn.</b> Tap cards to drop. Get your hand to ${ya} or less, then call Theo.`;
   else if(!v) msg=`<span class="warn">Can't drop those together.</span> One card, same numbers, or 3+ in a row of one suit.`;
   else msg=`Dropping ${describe(v)}. <b>Now tap the deck or a glowing card</b> to draw.${pickpocketReady()?' Pickpocket lets you take any card from this run.':''}`;
   $('status').innerHTML=msg;
@@ -1478,24 +1478,24 @@ function renderTable(){
 }
 function headline(r){
   const callerName=r.callerHuman?'You':r.caller;
-  return r.asaf?`${callerName} called Yaniv with ${r.t}, but ${r.asafer==='You'?'you':r.asafer} had ${r.asaferT}.`:`${callerName} called Yaniv with ${r.t} and nobody matched it.`;
+  return r.asaf?`${callerName} called Theo with ${r.t}, but ${r.asafer==='You'?'you':r.asafer} had ${r.asaferT}.`:`${callerName} called Theo with ${r.t} and nobody matched it.`;
 }
 function renderMatchResult(){
   const r=S.result, c=COUNTRIES[S.cIdx], m=S.mult;
   const prizeFor=place=>S.mode==='sprint'?fmt(c.reward*m*PLACE_PCT[place]):(S.mode==='duel'?(place===0?fmt(S.stake*1.9):'0'):(place===0?fmt(CHAMPS[S.cIdx].prize):'0'));
   const rows=r.rows.map(x=>`<div class="rrow ${x.human?'me':''}">
-      <div class="nm"><span class="rank">${x.place+1}</span>${x.name}${x.caller?'<span class="pill call">called</span>':''}${x.asafer?'<span class="pill lucky">asaf</span>':''}<small>hand ${x.ht}</small></div>
+      <div class="nm"><span class="rank">${x.place+1}</span>${x.name}${x.caller?'<span class="pill call">called</span>':''}${x.asafer?'<span class="pill lucky">mateo</span>':''}<small>hand ${x.ht}</small></div>
       <span></span><span class="sc">${prizeFor(x.place)}</span>
       <div class="mini">${x.hand.map(cd=>cardHTML(cd)).join('')}</div>
     </div>`).join('');
   let box, foot;
   if(S.mode==='sprint'){
     box=`<div class="prize"><span class="place">${['1st','2nd','3rd','4th'][r.place]} place</span><span class="amt"><span class="ic-coin"></span>+${fmt(r.pay+r.bonus)}</span>
-      <small>${r.insured?'Asaf insurance paid you the 2nd-place prize. ':''}${r.bonus?`Includes a ${fmt(r.bonus)} Asaf bonus. `:''}${canBuyAny()?'You can buy a new power card now.':''}</small></div>`;
+      <small>${r.insured?'Mateo insurance paid you the 2nd-place prize. ':''}${r.bonus?`Includes a ${fmt(r.bonus)} Mateo bonus. `:''}${canBuyAny()?'You can buy a new power card now.':''}</small></div>`;
     foot=`<button class="btn" type="button" data-act="tab" data-tab="${canBuyAny()?'deck':'play'}">${canBuyAny()?'Visit the market':'Back'}</button><button class="btn primary" type="button" data-act="sprint" ${E.tickets>=m?'':'disabled'}>${E.tickets>=m?'Play again':'Out of tickets'}</button>`;
   } else if(S.mode==='champion'){
     const ch=CHAMPS[S.cIdx], next=COUNTRIES[S.cIdx+1];
-    box=r.won?`<div class="prize"><span class="place">${c.city} stamp</span><span class="amt"><span class="ic-coin"></span>+${fmt(ch.prize)}</span><small>${next?`You beat ${ch.name}. Next stop: ${next.city}, where Yaniv is called at ${next.yanivAt} or less.`:`You beat ${ch.name}. That's the end of this prototype's route.`}</small></div>`
+    box=r.won?`<div class="prize"><span class="place">${c.city} stamp</span><span class="amt"><span class="ic-coin"></span>+${fmt(ch.prize)}</span><small>${next?`You beat ${ch.name}. Next stop: ${next.city}, where Theo is called at ${next.yanivAt} or less.`:`You beat ${ch.name}. That's the end of this prototype's route.`}</small></div>`
       :`<div class="prize lost"><span class="place">${['1st','2nd','3rd','4th'][r.place]} place</span><small>${ch.name} keeps the title for now. Power up your deck and try again.</small></div>`;
     foot=r.won?`<button class="btn primary" type="button" data-act="tab" data-tab="play">${next?`Travel to ${next.city}`:'Back'}</button>`
       :`<button class="btn" type="button" data-act="tab" data-tab="deck">Back to the market</button><button class="btn primary" type="button" data-act="champion" ${E.coins>=ch.fee?'':'disabled'}>Try again · ${fmt(ch.fee)}</button>`;
@@ -1505,14 +1505,14 @@ function renderMatchResult(){
       :`<div class="prize lost"><span class="place">${opp} wins</span><small>You lost your ${fmt(S.stake)} coin stake.</small></div>`;
     foot=`<button class="btn" type="button" data-act="tab" data-tab="friends">Back</button>${r.won?`<button class="btn primary" type="button" data-act="duel">Rematch · ${fmt(S.stake)}</button>`:`<button class="btn primary" type="button" data-act="revenge" ${E.coins>=rev?'':'disabled'}>Revenge · ${fmt(rev)}</button>`}`;
   }
-  $('round-sheet').innerHTML=`<h2 class="${r.asaf?'asaf':''}">${r.asaf?'Asaf!':'Yaniv!'}</h2><p>${headline(r)}</p>${box}<div class="rtable">${rows}</div><div class="foot">${foot}</div>`;
+  $('round-sheet').innerHTML=`<h2 class="${r.asaf?'asaf':''}">${r.asaf?'Mateo!':'Theo!'}</h2><p>${headline(r)}</p>${box}<div class="rtable">${rows}</div><div class="foot">${foot}</div>`;
 }
 function ordinal(n){return n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th')}
 function renderResult(){
   const r=S.result;
   const line=headline(r)+(r.asaf?` ${r.callerHuman?'You take':r.caller+' takes'} the hand plus ${S.g.asafPenalty}.`:' Everyone else adds their hand.');
   const rows=r.rows.map(x=>`<div class="rrow ${x.human?'me':''}">
-      <div class="nm">${x.name}${x.caller?'<span class="pill call">called</span>':''}${x.asafer?'<span class="pill lucky">asaf</span>':''}${x.lucky?'<span class="pill lucky">−50</span>':''}${x.out?'<span class="pill out">out</span>':''}<small>hand ${x.ht}</small></div>
+      <div class="nm">${x.name}${x.caller?'<span class="pill call">called</span>':''}${x.asafer?'<span class="pill lucky">mateo</span>':''}${x.lucky?'<span class="pill lucky">−50</span>':''}${x.out?'<span class="pill out">out</span>':''}<small>hand ${x.ht}</small></div>
       <span class="add ${x.add===0?'zero':(x.caller?'hit':'')}">+${x.add}</span><span class="sc">${x.score}</span>
       <div class="mini">${x.hand.map(c=>cardHTML(c)).join('')}</div></div>`).join('');
   let foot;
@@ -1520,7 +1520,7 @@ function renderResult(){
     const me=S.players[0], standings=[...S.players].sort((a,b)=>(a.out-b.out)||(a.score-b.score)), place=standings.indexOf(me)+1;
     foot=`<p style="margin-top:12px"><b>${me.out?`You went over ${S.g.endScore}. You finished ${ordinal(place)} of ${S.players.length}.`:`You're the last one at the table.`}</b></p><div class="foot"><button class="btn" type="button" data-act="leave">Leave</button><button class="btn primary" type="button" data-act="classic">Play again</button></div>`;
   } else foot=`<div class="foot"><button class="btn" type="button" data-act="leave">Leave</button><button class="btn primary" type="button" data-act="next">Next round</button></div>`;
-  $('round-sheet').innerHTML=`<h2 class="${r.asaf?'asaf':''}">${r.asaf?'Asaf!':'Yaniv!'}</h2><p>${line}</p><div class="rtable">${rows}</div>${foot}`;
+  $('round-sheet').innerHTML=`<h2 class="${r.asaf?'asaf':''}">${r.asaf?'Mateo!':'Theo!'}</h2><p>${line}</p><div class="rtable">${rows}</div>${foot}`;
 }
 
 /* ================= info sheets ================= */
@@ -1531,8 +1531,8 @@ function openRules(){
     <li><b>Lowest hand wins.</b> A = 1, 2–10 = their number, J Q K = 10, Joker = 0.</li>
     <li><b>Drop</b> one card, same numbers (7-7), or 3+ in a row of one suit (4-5-6♥).</li>
     <li><b>Draw</b> one card: from the deck, or the card the last player dropped.</li>
-    <li><b>Hand ${y} or less?</b> Call Yaniv at the start of your turn.</li>
-    <li><b>Asaf:</b> if someone has the same or less, they caught you and win.</li>
+    <li><b>Hand ${y} or less?</b> Call Theo at the start of your turn.</li>
+    <li><b>Mateo!</b> If someone has the same or less, they shout Mateo, catch you and win.</li>
     <li><b>Power cards</b> bend the rules in your favour. Buy them with coins and pick 3 for your deck.</li>
   </ol>
   <div class="foot"><button class="btn primary" type="button" data-act="close">Got it</button></div>`;
@@ -1542,7 +1542,7 @@ function openSettings(){
   resetArmed=false;
   $('info-sheet').innerHTML=`<h2>Settings</h2>
     <div class="form">
-      <div class="field"><label for="s-sfx">Sound effects<small>Cards, coins, Yaniv and Asaf</small></label><input type="checkbox" id="s-sfx"></div>
+      <div class="field"><label for="s-sfx">Sound effects<small>Cards, coins, Theo and Mateo</small></label><input type="checkbox" id="s-sfx"></div>
       <div class="field"><label for="s-music">Music<small>A chill lounge beat, different in each city</small></label><input type="checkbox" id="s-music"></div>
       ${FORM?'<div class="field"><label>Send feedback<small>Tell us what to fix</small></label><button class="btn" type="button" data-act="feedback">Open</button></div>':''}
       <div class="field"><label>Share the game<small>Invite a friend to test</small></label><button class="btn" type="button" data-act="share">Share</button></div>

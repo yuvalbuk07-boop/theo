@@ -1,6 +1,6 @@
-# Yaniv Hostel (prototype)
+# Theo! (prototype)
 
-A phone-first prototype of Yaniv, the backpacker card game: win rounds for coins, buy power cards, beat each city's champion, and duel rivals.
+A phone-first card game prototype (Yaniv-style rules, renamed Theo!/Mateo!): win rounds for coins, buy power cards, beat each city's champion, and duel rivals.
 
 Play: https://yuvalbuk07-boop.github.io/yaniv-hostel/
 
